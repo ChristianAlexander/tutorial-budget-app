@@ -42,6 +42,7 @@ defmodule Budgie.Accounts.User do
     |> cast(attrs, [:email, :password, :name])
     |> validate_email(opts)
     |> validate_password(opts)
+    |> validate_name()
   end
 
   defp validate_email(changeset, opts) do
@@ -50,6 +51,12 @@ defmodule Budgie.Accounts.User do
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
     |> maybe_validate_unique_email(opts)
+  end
+
+  defp validate_name(changeset) do
+    changeset
+    |> validate_required([:name])
+    |> validate_length(:name, min: 2, max: 100)
   end
 
   defp validate_password(changeset, opts) do
