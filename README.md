@@ -1,18 +1,25 @@
 # Budgie
 
-To start your Phoenix server:
+A demonstration of a Phoenix LiveView-powered budget tracking application.
+
+Follow the development progress in the YouTube tutorial series called [Phoenix App from Scratch](https://www.youtube.com/playlist?list=PL31bV6MaFAPllC8JP0vaRKrVm5kj7c1vc).
+
+[![Watch the series](https://i.ytimg.com/pl_c/PL31bV6MaFAPllC8JP0vaRKrVm5kj7c1vc/studio_square_thumbnail.jpg?sqp=CJzVnr0G-oaymwEICKoDEPABSFqi85f_AwYIgvSevQY=&rs=AOn4CLCMTba28kSAsUDJtIvuGpCFOY0IUg&days_since_epoch=20127)](https://www.youtube.com/playlist?list=PL31bV6MaFAPllC8JP0vaRKrVm5kj7c1vc)
+
+To start the server:
 
   * Run `mix setup` to install and setup dependencies
   * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## Progress
 
-## Learn more
-
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+- [x] Initial setup / authentication
+- [ ] Budget data modeling and forms
+- [ ] Transaction data modeling and forms
+- [ ] Efficient data fetching with grouping sets
+- [ ] Permissions
+- [ ] Add collaboration with invitation links
+- [ ] UI/UX polishing
+- [ ] Landing page
