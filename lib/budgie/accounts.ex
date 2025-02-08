@@ -175,6 +175,27 @@ defmodule Budgie.Accounts do
   end
 
   @doc """
+  Returns an `%Ecto.Changeset{}` for changing a user's name.
+
+  ## Examples
+
+  iex > change_user_name(user)
+  %Ecto.Changeset{data: %User{}}
+  """
+  def change_user_name(user, attrs \\ %{}) do
+    User.name_changeset(user, attrs)
+  end
+
+  @doc """
+  Changes a user's name.
+  """
+  def update_user_name(user, attrs \\ %{}) do
+    user
+    |> User.name_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for changing the user password.
 
   ## Examples
