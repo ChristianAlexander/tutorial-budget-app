@@ -16,7 +16,7 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 ## Progress
 
 - [x] Initial setup / authentication
-- [ ] Budget data modeling and forms
+- [x] Budget data modeling and forms
 - [ ] Transaction data modeling and forms
 - [ ] Efficient data fetching with grouping sets
 - [ ] Permissions
