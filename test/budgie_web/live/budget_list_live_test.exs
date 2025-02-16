@@ -21,6 +21,7 @@ defmodule BudgieWeb.BudgetListLiveTest do
 
       assert html =~ budget.name
       assert html =~ budget.description
+      assert html =~ user.name
     end
   end
 end
