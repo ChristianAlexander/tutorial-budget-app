@@ -46,5 +46,32 @@ defmodule Budgie.TrackingTest do
       assert changeset.valid? == false
       assert %{end_date: ["must end after start date"]} = errors_on(changeset)
     end
+
+    test "list_budgets/0 returns all budgets" do
+      budget = budget_fixture()
+      assert Tracking.list_budgets() == [budget]
+    end
+
+    test "list_budgets/1 scopes to the provided user" do
+      user = Budgie.AccountsFixtures.user_fixture()
+
+      budget = budget_fixture(%{creator_id: user.id})
+      _other_budget = budget_fixture()
+
+      assert Tracking.list_budgets(user: user) == [
+               budget
+             ]
+    end
+
+    test "get_budget/1 returns the budget with given id" do
+      budget = budget_fixture()
+
+      assert Tracking.get_budget(budget.id) == budget
+    end
+
+    test "get_budget/1 returns nil when budget doesn't exist" do
+      _unrelated_budget = budget_fixture()
+      assert is_nil(Tracking.get_budget("10fe1ad8-6133-5d7d-b5c9-da29581bb923"))
+    end
   end
 end
