@@ -9,4 +9,8 @@ defmodule Budgie.Tracking do
     |> Budget.changeset(attrs)
     |> Repo.insert()
   end
+
+  def list_budgets, do: Repo.all(Budget)
+
+  def get_budget(id), do: Repo.get(Budget, id)
 end
