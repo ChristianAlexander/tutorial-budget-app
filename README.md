@@ -4,7 +4,7 @@ A demonstration of a Phoenix LiveView-powered budget tracking application.
 
 Follow the development progress in the YouTube tutorial series called [Phoenix App from Scratch](https://www.youtube.com/playlist?list=PL31bV6MaFAPllC8JP0vaRKrVm5kj7c1vc).
 
-[![Watch the series](https://i.ytimg.com/pl_c/PL31bV6MaFAPllC8JP0vaRKrVm5kj7c1vc/studio_square_thumbnail.jpg?sqp=CJzVnr0G-oaymwEICKoDEPABSFqi85f_AwYIgvSevQY=&rs=AOn4CLCMTba28kSAsUDJtIvuGpCFOY0IUg&days_since_epoch=20127)](https://www.youtube.com/playlist?list=PL31bV6MaFAPllC8JP0vaRKrVm5kj7c1vc)
+[![Watch the series](https://img.youtube.com/vi/0rpt5sMb7cw/maxresdefault.jpg)](https://www.youtube.com/playlist?list=PL31bV6MaFAPllC8JP0vaRKrVm5kj7c1vc)
 
 To start the server:
 
