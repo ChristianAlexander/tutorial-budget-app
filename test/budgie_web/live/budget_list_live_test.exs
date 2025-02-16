@@ -40,12 +40,12 @@ defmodule BudgieWeb.BudgetListLiveTest do
       conn = log_in_user(conn, user)
       {:ok, lv, _html} = live(conn, ~p"/budgets/new")
 
-      form = element(lv, "#create-budget-modal form")
-
-      html =
-        render_change(form, %{
+      form =
+        form(lv, "#create-budget-modal form", %{
           "budget" => %{"name" => ""}
         })
+
+      html = render_change(form)
 
       assert html =~ html_escape("can't be blank")
     end
@@ -57,10 +57,8 @@ defmodule BudgieWeb.BudgetListLiveTest do
       conn = log_in_user(conn, user)
       {:ok, lv, _html} = live(conn, ~p"/budgets/new")
 
-      form = form(lv, "#create-budget-modal form")
-
-      {:ok, _lv, html} =
-        render_submit(form, %{
+      form =
+        form(lv, "#create-budget-modal form", %{
           "budget" => %{
             "name" => "A new name",
             "description" => "The new description",
@@ -68,6 +66,9 @@ defmodule BudgieWeb.BudgetListLiveTest do
             "end_date" => "2025-01-31"
           }
         })
+
+      {:ok, _lv, html} =
+        render_submit(form)
         |> follow_redirect(conn)
 
       assert html =~ "Budget created"
