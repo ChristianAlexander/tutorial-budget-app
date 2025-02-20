@@ -3,7 +3,7 @@ defmodule BudgieWeb.BudgetShowLive do
 
   alias Budgie.Tracking
 
-  def mount(%{"budget_id" => id}, _session, socket) do
+  def mount(%{"budget_id" => id}, _session, socket) when is_uuid(id) do
     budget =
       Tracking.get_budget(id,
         user: socket.assigns.current_user,
@@ -20,6 +20,15 @@ defmodule BudgieWeb.BudgetShowLive do
 
       {:ok, socket}
     end
+  end
+
+  def mount(_invalid_id, _session, socket) do
+    socket =
+      socket
+      |> put_flash(:error, "Budget not found")
+      |> redirect(to: ~p"/budgets")
+
+    {:ok, socket}
   end
 
   def render(assigns) do
