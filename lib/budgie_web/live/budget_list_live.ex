@@ -44,6 +44,7 @@ defmodule BudgieWeb.BudgetListLive do
       <:col :let={budget} label="Start Date">{budget.start_date}</:col>
       <:col :let={budget} label="End Date">{budget.end_date}</:col>
       <:col :let={budget} label="Creator Name">{budget.creator.name}</:col>
+      <:col :let={budget} label="Actions"><.link navigate={~p"/budgets/#{budget}"}>View</.link></:col>
     </.table>
     """
   end

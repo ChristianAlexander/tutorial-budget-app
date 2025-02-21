@@ -55,6 +55,8 @@ defmodule BudgieWeb do
       use Phoenix.LiveView,
         layout: {BudgieWeb.Layouts, :app}
 
+      import Budgie.Guards
+
       unquote(html_helpers())
     end
   end
