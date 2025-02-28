@@ -8,7 +8,7 @@ defmodule Budgie.TrackingTest do
   describe "budgets" do
     alias Budgie.Tracking.Budget
 
-    test "create_budget/2 with valid data creates budget" do
+    test "create_budget/1 with valid data creates budget" do
       user = Budgie.AccountsFixtures.user_fixture()
 
       attrs = valid_budget_attributes(%{creator_id: user.id})
@@ -21,7 +21,7 @@ defmodule Budgie.TrackingTest do
       assert budget.creator_id == user.id
     end
 
-    test "create_budget/2 requires name" do
+    test "create_budget/1 requires name" do
       attrs =
         valid_budget_attributes()
         |> Map.delete(:name)
@@ -32,7 +32,7 @@ defmodule Budgie.TrackingTest do
       assert %{name: ["can't be blank"]} = errors_on(changeset)
     end
 
-    test "create_budget/2 requires valid dates" do
+    test "create_budget/1 requires valid dates" do
       attrs =
         valid_budget_attributes()
         |> Map.merge(%{
