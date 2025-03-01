@@ -50,7 +50,7 @@ defmodule BudgieWeb.CreateTransactionDialog do
   end
 
   defp assign_form(socket, changeset) do
-    assign(socket, form: to_form(changeset))
+    assign(socket, form: to_form(changeset, as: "transaction"))
   end
 
   defp default_transaction do
