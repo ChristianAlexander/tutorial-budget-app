@@ -15,10 +15,13 @@ defmodule BudgieWeb.BudgetShowLive do
       transactions =
         Tracking.list_transactions(budget)
 
+      summary = Tracking.summarize_budget_transactions(budget)
+
       {:ok,
        assign(socket,
          budget: budget,
-         transactions: transactions
+         transactions: transactions,
+         summary: summary
        )}
     else
       socket =
@@ -53,16 +56,50 @@ defmodule BudgieWeb.BudgetShowLive do
         budget={@budget}
       />
     </.modal>
+    <div class="bg-white rounded border border-gray-100 px-6 py-6">
+      <div class="flex justify-between items-center mb-4 space-x-2">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">{@budget.name}</h1>
+          <p :if={@budget.description} class="text-gray-600 mt-1">{@budget.description}</p>
+        </div>
+      </div>
 
-    <div class="flex justify-between items-center">
-      <div>{@budget.name} by {@budget.creator.name}</div>
-      <.link
-        navigate={~p"/budgets/#{@budget}/new-transaction"}
-        class="bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-800 px-3 py-2 rounded-lg flex items-center gap-2"
-      >
-        <.icon name="hero-plus" class="h-4 w-4" />
-        <span>New Transaction</span>
-      </.link>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <% funding = Map.get(@summary, :funding, Decimal.new("0")) %>
+          <% spending = Map.get(@summary, :spending, Decimal.new("0")) %>
+          <% balance = Decimal.sub(funding, spending) %>
+          <div class="flex items-center space-x-2">
+            <.icon name="hero-wallet" class="w-4 h-4 text-gray-400" />
+            <span class="text-sm font-medium text-gray-500">Balance</span>
+          </div>
+          <div>
+            <.currency amount={balance} class="text-2xl font-bold" />
+          </div>
+
+          <div class="grid grid-cols-2 text-gray-500">
+            <div>Funding</div>
+            <div>Spending</div>
+            <div><.currency amount={funding} positive_class="text-gray-400" /></div>
+            <div><.currency amount={Decimal.negate(spending)} negative_class="text-gray-400" /></div>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center space-x-2">
+            <.icon name="hero-banknotes" class="w-4 h-4 text-gray-400" />
+            <span class="text-sm font-medium text-gray-500">Transactions</span>
+          </div>
+          <div class="text-gray-900">
+            <.link
+              navigate={~p"/budgets/#{@budget}/new-transaction"}
+              class="bg-blue-100 text-blue-800 hover:bg-blue-200 px-3 py-2 rounded-lg inline-flex items-center gap-2"
+            >
+              <.icon name="hero-plus" class="h-5 w-5" />
+              <span>New Transaction</span>
+            </.link>
+          </div>
+        </div>
+      </div>
     </div>
 
     <.table id="transactions" rows={@transactions}>
