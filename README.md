@@ -13,6 +13,19 @@ To start the server:
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
+## Docker
+To start the server:
+
+ * `docker-compose up --build`
+
+To run the tests:
+
+ * `docker-compose -f docker-compose-test.yml run test`
+
+To run an iex:
+
+ * `docker-compose run --rm web iex -S mix`
+
 ## Progress
 
 - [x] Initial setup / authentication

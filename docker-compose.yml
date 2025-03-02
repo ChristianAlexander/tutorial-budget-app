@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: budgie_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    command: mix phx.server
+    environment:
+      MIX_ENV: dev
+      # The DATABASE_URL is set to point to the 'db' service
+      DATABASE_URL: "ecto://postgres:postgres@db:5432/budgie_dev"
+      DATABASE_HOST: "db"
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:
+
