@@ -1,17 +1,15 @@
 defmodule Budgie.TrackingTest do
   use Budgie.DataCase
 
-  import Budgie.TrackingFixtures
-
   alias Budgie.Tracking
 
   describe "budgets" do
     alias Budgie.Tracking.Budget
 
     test "create_budget/1 with valid data creates budget" do
-      user = Budgie.AccountsFixtures.user_fixture()
+      user = insert(:user)
 
-      attrs = valid_budget_attributes(%{creator_id: user.id})
+      attrs = params_with_assocs(:budget, creator: user)
 
       assert {:ok, %Budget{} = budget} = Tracking.create_budget(attrs)
       assert budget.name == attrs.name
@@ -23,7 +21,7 @@ defmodule Budgie.TrackingTest do
 
     test "create_budget/1 requires name" do
       attrs =
-        valid_budget_attributes()
+        params_with_assocs(:budget)
         |> Map.delete(:name)
 
       assert {:error, %Ecto.Changeset{} = changeset} = Tracking.create_budget(attrs)
@@ -34,7 +32,7 @@ defmodule Budgie.TrackingTest do
 
     test "create_budget/1 requires valid dates" do
       attrs =
-        valid_budget_attributes()
+        params_with_assocs(:budget)
         |> Map.merge(%{
           start_date: ~D[2025-12-31],
           end_date: ~D[2025-01-01]
@@ -48,29 +46,25 @@ defmodule Budgie.TrackingTest do
     end
 
     test "list_budgets/0 returns all budgets" do
-      budget = budget_fixture()
+      budget = insert(:budget) |> without_preloads()
+
       assert Tracking.list_budgets() == [budget]
     end
 
     test "list_budgets/1 scopes to the provided user" do
-      user = Budgie.AccountsFixtures.user_fixture()
+      [budget, _other_budget] = insert_pair(:budget)
 
-      budget = budget_fixture(%{creator_id: user.id})
-      _other_budget = budget_fixture()
-
-      assert Tracking.list_budgets(user: user) == [
-               budget
-             ]
+      assert Tracking.list_budgets(user: budget.creator) == [without_preloads(budget)]
     end
 
     test "get_budget/1 returns the budget with given id" do
-      budget = budget_fixture()
+      budget = insert(:budget) |> without_preloads()
 
       assert Tracking.get_budget(budget.id) == budget
     end
 
     test "get_budget/1 returns nil when budget doesn't exist" do
-      _unrelated_budget = budget_fixture()
+      _unrelated_budget = insert(:budget)
       assert is_nil(Tracking.get_budget("10fe1ad8-6133-5d7d-b5c9-da29581bb923"))
     end
   end
