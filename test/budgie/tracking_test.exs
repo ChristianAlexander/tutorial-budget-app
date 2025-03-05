@@ -159,6 +159,15 @@ defmodule Budgie.TrackingTest do
                Tracking.change_transaction(%BudgetTransaction{}, params)
     end
 
+    test "change_transaction/1 with HUGE amount returns an error" do
+      params =
+        params_with_assocs(:budget_transaction)
+        |> Map.put(:amount, Decimal.new("9999999"))
+
+      assert %Ecto.Changeset{valid?: false} =
+               Tracking.change_transaction(%BudgetTransaction{}, params)
+    end
+
     test "summarize_budget_transactions/1 doesn't fail without transactions" do
       budget = insert(:budget)
 
