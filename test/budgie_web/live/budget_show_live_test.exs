@@ -44,4 +44,76 @@ defmodule BudgieWeb.BudgetShowLiveTest do
       assert %{"error" => "Budget not found"} = conn.assigns.flash
     end
   end
+
+  describe "Create transaction modal" do
+    test "modal is presented", %{conn: conn, user: user, budget: budget} do
+      conn = log_in_user(conn, user)
+      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/new-transaction")
+
+      assert has_element?(lv, "#create-transaction-modal")
+    end
+
+    test "creates a transaction", %{
+      conn: conn,
+      user: user,
+      budget: budget
+    } do
+      conn = log_in_user(conn, user)
+      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/new-transaction")
+
+      params = params_for(:budget_transaction)
+
+      form =
+        form(lv, "#create-transaction-modal form", %{
+          "transaction" => params
+        })
+
+      {:ok, _lv, html} =
+        render_submit(form)
+        |> follow_redirect(conn)
+
+      assert html =~ "Transaction created"
+      assert html =~ params.description
+    end
+
+    test "validation errors are presented when form is changed with invalid input", %{
+      conn: conn,
+      user: user,
+      budget: budget
+    } do
+      conn = log_in_user(conn, user)
+      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/new-transaction")
+
+      params = params_for(:budget_transaction, amount: Decimal.new("-42"))
+
+      form =
+        form(lv, "#create-transaction-modal form", %{
+          "transaction" => params
+        })
+
+      html = render_change(form)
+
+      assert html =~ "must be greater than 0"
+    end
+
+    test "validation errors are presented when form is submitted with invalid input", %{
+      conn: conn,
+      user: user,
+      budget: budget
+    } do
+      conn = log_in_user(conn, user)
+      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/new-transaction")
+
+      params = params_for(:budget_transaction, amount: Decimal.new("-42"))
+
+      form =
+        form(lv, "#create-transaction-modal form", %{
+          "transaction" => params
+        })
+
+      html = render_submit(form)
+
+      assert html =~ "must be greater than 0"
+    end
+  end
 end
