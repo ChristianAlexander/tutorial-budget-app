@@ -24,6 +24,7 @@ defmodule Budgie.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Budgie.DataCase
+      import Budgie.Factory
     end
   end
 

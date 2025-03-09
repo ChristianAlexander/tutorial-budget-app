@@ -2,19 +2,16 @@ defmodule BudgieWeb.BudgetListLiveTest do
   use BudgieWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
-  import Budgie.TrackingFixtures
 
   alias Budgie.Tracking
 
   setup do
-    user = Budgie.AccountsFixtures.user_fixture()
-
-    %{user: user}
+    %{user: insert(:user)}
   end
 
   describe "Index view" do
     test "shows budget when one exists", %{conn: conn, user: user} do
-      budget = budget_fixture(%{creator_id: user.id})
+      budget = insert(:budget, creator: user)
 
       conn = log_in_user(conn, user)
       {:ok, _lv, html} = live(conn, ~p"/budgets")
@@ -107,13 +104,11 @@ defmodule BudgieWeb.BudgetListLiveTest do
     conn = log_in_user(conn, user)
     {:ok, lv, _html} = live(conn, ~p"/budgets/new")
 
-    # Creator ID isn't an input on the page, must be removed
     attrs =
-      valid_budget_attributes(%{
+      params_for(:budget,
         start_date: ~D[2025-12-31],
         end_date: ~D[2025-01-01]
-      })
-      |> Map.delete(:creator_id)
+      )
 
     form =
       form(lv, "#create-budget-modal form", %{
