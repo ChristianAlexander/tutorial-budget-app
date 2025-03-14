@@ -4,7 +4,7 @@ defmodule BudgieWeb.BudgetShowLive do
   alias Budgie.Tracking
   alias Budgie.Tracking.BudgetTransaction
 
-  def mount(%{"budget_id" => id}, _session, socket) when is_uuid(id) do
+  def mount(%{"budget_id" => id} = params, _session, socket) when is_uuid(id) do
     budget =
       Tracking.get_budget(id,
         user: socket.assigns.current_user,
@@ -22,7 +22,8 @@ defmodule BudgieWeb.BudgetShowLive do
          budget: budget,
          transactions: transactions,
          summary: summary
-       )}
+       )
+       |> apply_action(params)}
     else
       socket =
         socket
@@ -42,72 +43,47 @@ defmodule BudgieWeb.BudgetShowLive do
     {:ok, socket}
   end
 
-  def render(assigns) do
-    ~H"""
-    <.modal
-      :if={@live_action == :new_transaction}
-      id="create-transaction-modal"
-      on_cancel={JS.navigate(~p"/budgets/#{@budget}", replace: true)}
-      show
-    >
-      <.live_component
-        module={BudgieWeb.CreateTransactionDialog}
-        id="create-transaction"
-        budget={@budget}
-      />
-    </.modal>
-    <div class="bg-white rounded border border-gray-100 px-6 py-6">
-      <div class="flex justify-between items-center mb-4 space-x-2">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">{@budget.name}</h1>
-          <p :if={@budget.description} class="text-gray-600 mt-1">{@budget.description}</p>
-        </div>
-      </div>
+  def apply_action(%{assigns: %{live_action: :edit_transaction}} = socket, %{
+        "transaction_id" => transaction_id
+      }) do
+    transaction = Enum.find(socket.assigns.transactions, &(&1.id == transaction_id))
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-2">
-          <% funding = Map.get(@summary, :funding, Decimal.new("0")) %>
-          <% spending = Map.get(@summary, :spending, Decimal.new("0")) %>
-          <% balance = Decimal.sub(funding, spending) %>
-          <div class="flex items-center space-x-2">
-            <.icon name="hero-wallet" class="w-4 h-4 text-gray-400" />
-            <span class="text-sm font-medium text-gray-500">Balance</span>
-          </div>
-          <div>
-            <.currency amount={balance} class="text-2xl font-bold" />
-          </div>
+    if transaction do
+      assign(socket, transaction: transaction)
+    else
+      socket
+      |> put_flash(:error, "Transaction not found")
+      |> redirect(to: ~p"/budgets/#{socket.assigns.budget}")
+    end
+  end
 
-          <div class="grid grid-cols-2 text-gray-500">
-            <div>Funding</div>
-            <div>Spending</div>
-            <div><.currency amount={funding} positive_class="text-gray-400" /></div>
-            <div><.currency amount={Decimal.negate(spending)} negative_class="text-gray-400" /></div>
-          </div>
-        </div>
-        <div class="space-y-2">
-          <div class="flex items-center space-x-2">
-            <.icon name="hero-banknotes" class="w-4 h-4 text-gray-400" />
-            <span class="text-sm font-medium text-gray-500">Transactions</span>
-          </div>
-          <div class="text-gray-900">
-            <.link
-              navigate={~p"/budgets/#{@budget}/new-transaction"}
-              class="bg-blue-100 text-blue-800 hover:bg-blue-200 px-3 py-2 rounded-lg inline-flex items-center gap-2"
-            >
-              <.icon name="hero-plus" class="h-5 w-5" />
-              <span>New Transaction</span>
-            </.link>
-          </div>
-        </div>
-      </div>
-    </div>
+  def apply_action(socket, _), do: socket
 
-    <.table id="transactions" rows={@transactions}>
-      <:col :let={transaction} label="Description">{transaction.description}</:col>
-      <:col :let={transaction} label="Date">{transaction.effective_date}</:col>
-      <:col :let={transaction} label="Amount"><.transaction_amount transaction={transaction} /></:col>
-    </.table>
-    """
+  def handle_event("delete_transaction", %{"id" => transaction_id}, socket) do
+    transaction = Enum.find(socket.assigns.transactions, &(&1.id == transaction_id))
+
+    if transaction do
+      case Tracking.delete_transaction(transaction) do
+        {:ok, _} ->
+          socket =
+            socket
+            |> put_flash(:info, "Transaction deleted")
+            |> push_navigate(to: ~p"/budgets/#{socket.assigns.budget.id}", replace: true)
+
+          {:noreply, socket}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete transaction")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Transaction not found")}
+    end
+  end
+
+  defp default_transaction do
+    %BudgetTransaction{
+      effective_date: Date.utc_today()
+    }
   end
 
   @doc """

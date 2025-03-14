@@ -1,0 +1,84 @@
+<.modal
+  :if={@live_action in [:new_transaction, :edit_transaction]}
+  id="transaction-modal"
+  on_cancel={JS.navigate(~p"/budgets/#{@budget}", replace: true)}
+  show
+>
+  <.live_component
+    module={BudgieWeb.TransactionDialog}
+    id="transaction"
+    budget={@budget}
+    transaction={assigns[:transaction] || default_transaction()}
+    action={@live_action}
+  />
+</.modal>
+<div class="bg-white rounded border border-gray-100 px-6 py-6">
+  <div class="flex justify-between items-center mb-4 space-x-2">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">{@budget.name}</h1>
+      <p :if={@budget.description} class="text-gray-600 mt-1">{@budget.description}</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="space-y-2">
+      <% funding = Map.get(@summary, :funding, Decimal.new("0")) %>
+      <% spending = Map.get(@summary, :spending, Decimal.new("0")) %>
+      <% balance = Decimal.sub(funding, spending) %>
+      <div class="flex items-center space-x-2">
+        <.icon name="hero-wallet" class="w-4 h-4 text-gray-400" />
+        <span class="text-sm font-medium text-gray-500">Balance</span>
+      </div>
+      <div>
+        <.currency amount={balance} class="text-2xl font-bold" />
+      </div>
+
+      <div class="grid grid-cols-2 text-gray-500">
+        <div>Funding</div>
+        <div>Spending</div>
+        <div><.currency amount={funding} positive_class="text-gray-400" /></div>
+        <div><.currency amount={Decimal.negate(spending)} negative_class="text-gray-400" /></div>
+      </div>
+    </div>
+    <div class="space-y-2">
+      <div class="flex items-center space-x-2">
+        <.icon name="hero-banknotes" class="w-4 h-4 text-gray-400" />
+        <span class="text-sm font-medium text-gray-500">Transactions</span>
+      </div>
+      <div class="text-gray-900">
+        <.link
+          navigate={~p"/budgets/#{@budget}/new-transaction"}
+          class="bg-blue-100 text-blue-800 hover:bg-blue-200 px-3 py-2 rounded-lg inline-flex items-center gap-2"
+        >
+          <.icon name="hero-plus" class="h-5 w-5" />
+          <span>New Transaction</span>
+        </.link>
+      </div>
+    </div>
+  </div>
+</div>
+
+<.table id="transactions" rows={@transactions}>
+  <:col :let={transaction} label="Description">{transaction.description}</:col>
+  <:col :let={transaction} label="Date">{transaction.effective_date}</:col>
+  <:col :let={transaction} label="Amount"><.transaction_amount transaction={transaction} /></:col>
+  <:col :let={transaction} label="Actions">
+    <.dropdown_menu id={"#{transaction.id}-menu"}>
+      <.link
+        navigate={~p"/budgets/#{@budget}/transactions/#{transaction}/edit"}
+        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+      >
+        <.icon name="hero-pencil" class="w-4 h-4" /> Edit Transaction
+      </.link>
+      <button
+        type="button"
+        phx-click="delete_transaction"
+        phx-value-id={transaction.id}
+        data-confirm="Are you sure you want to delete the transaction?"
+        class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+      >
+        <.icon name="hero-trash" class="w-4 h-4" /> Delete Transaction
+      </button>
+    </.dropdown_menu>
+  </:col>
+</.table>
