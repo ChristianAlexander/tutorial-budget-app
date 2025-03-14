@@ -68,7 +68,7 @@ defmodule BudgieWeb.BudgetShowLive do
           socket =
             socket
             |> put_flash(:info, "Transaction deleted")
-            |> redirect(to: ~p"/budgets/#{socket.assigns.budget.id}", replace: true)
+            |> push_navigate(to: ~p"/budgets/#{socket.assigns.budget.id}", replace: true)
 
           {:noreply, socket}
 
