@@ -22,5 +22,6 @@ defmodule Budgie.Tracking.BudgetPeriod do
       message: "must end after start date"
     )
     |> unique_constraint([:budget_id, :start_date])
+    |> Budgie.Validations.validate_date_month_boundaries()
   end
 end

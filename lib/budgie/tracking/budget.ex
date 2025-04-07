@@ -28,5 +28,6 @@ defmodule Budgie.Tracking.Budget do
       name: :budget_end_after_start,
       message: "must end after start date"
     )
+    |> Budgie.Validations.validate_date_month_boundaries()
   end
 end
