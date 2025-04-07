@@ -58,6 +58,18 @@
   </div>
 </div>
 
+<div class="grid grid-cols-1 gap-4 mt-6">
+  <div
+    :for={period <- @budget.periods}
+    class="bg-white rounded shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
+  >
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-medium text-gray-900">
+        {period.start_date}
+      </h3>
+    </div>
+  </div>
+</div>
 <.table id="transactions" rows={@transactions}>
   <:col :let={transaction} label="Description">{transaction.description}</:col>
   <:col :let={transaction} label="Date">{transaction.effective_date}</:col>

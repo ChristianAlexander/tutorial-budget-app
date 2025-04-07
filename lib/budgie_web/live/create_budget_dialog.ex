@@ -28,11 +28,11 @@ defmodule BudgieWeb.CreateBudgetDialog do
   def handle_event("save", %{"budget" => params}, socket) do
     params = Map.put(params, "creator_id", socket.assigns.current_user.id)
 
-    with {:ok, %Budget{}} <- Tracking.create_budget(params) do
+    with {:ok, %Budget{} = budget} <- Tracking.create_budget(params) do
       socket =
         socket
         |> put_flash(:info, "Budget created")
-        |> push_navigate(to: ~p"/budgets", replace: true)
+        |> push_navigate(to: ~p"/budgets/#{budget}", replace: true)
 
       {:noreply, socket}
     else
