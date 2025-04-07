@@ -29,6 +29,18 @@ defmodule Budgie.Tracking.Budget do
       message: "must end after start date"
     )
     |> Budgie.Validations.validate_date_month_boundaries()
+    |> add_periods()
+  end
+
+  defp add_periods(%{valid?: false} = changeset), do: changeset
+
+  defp add_periods(changeset) do
+    start_date = Ecto.Changeset.get_field(changeset, :start_date)
+    end_date = Ecto.Changeset.get_field(changeset, :end_date)
+
+    changeset
+    |> Ecto.Changeset.change(%{periods: months_between(start_date, end_date)})
+    |> Ecto.Changeset.cast_assoc(:periods)
   end
 
   def months_between(start_date, end_date, acc \\ []) do
