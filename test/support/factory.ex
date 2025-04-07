@@ -26,6 +26,14 @@ defmodule Budgie.Factory do
     }
   end
 
+  def budget_period_factory do
+    %Tracking.BudgetPeriod{
+      budget: build(:budget),
+      start_date: ~D[2025-01-01],
+      end_date: ~D[2025-01-31]
+    }
+  end
+
   def budget_transaction_factory do
     %Tracking.BudgetTransaction{
       effective_date: ~D[2025-01-01],
