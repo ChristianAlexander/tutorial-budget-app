@@ -17,6 +17,27 @@ defmodule Budgie.TrackingTest do
       assert budget.creator_id == attrs.creator_id
     end
 
+    test "create_budget/1 with valid data creates periods along with the budget" do
+      user = insert(:user)
+
+      valid_attrs = %{
+        name: "some name",
+        description: "some description",
+        start_date: ~D[2025-01-01],
+        end_date: ~D[2025-02-28],
+        creator_id: user.id
+      }
+
+      assert {:ok, %Budget{} = budget} = Tracking.create_budget(valid_attrs)
+      assert Enum.count(budget.periods) == 2
+
+      [january_period, february_period] = budget.periods
+      assert january_period.start_date == ~D[2025-01-01]
+      assert january_period.end_date == ~D[2025-01-31]
+      assert february_period.start_date == ~D[2025-02-01]
+      assert february_period.end_date == ~D[2025-02-28]
+    end
+
     test "create_budget/1 requires name" do
       attrs =
         params_with_assocs(:budget)
