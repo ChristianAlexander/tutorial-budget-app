@@ -3,6 +3,7 @@ defmodule Budgie.Tracking do
 
   alias Budgie.Repo
   alias Budgie.Tracking.Budget
+  alias Budgie.Tracking.BudgetPeriod
 
   def create_budget(attrs \\ %{}) do
     %Budget{}
@@ -109,4 +110,6 @@ defmodule Budgie.Tracking do
       Map.put(summary, type, amount)
     end)
   end
+
+  def get_budget_period(id), do: Repo.get(BudgetPeriod, id)
 end

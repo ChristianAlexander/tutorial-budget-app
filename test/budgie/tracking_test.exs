@@ -246,4 +246,18 @@ defmodule Budgie.TrackingTest do
              }
     end
   end
+
+  describe "budget periods" do
+    test "get_budget_period/1 returns nil when period does not exist" do
+      fake_period_id = Ecto.UUID.generate()
+
+      assert is_nil(Tracking.get_budget_period(fake_period_id))
+    end
+
+    test "get_budget_period/1 returns the period with given id" do
+      period = insert(:budget_period)
+
+      assert Tracking.get_budget_period(period.id) == without_preloads(period)
+    end
+  end
 end
