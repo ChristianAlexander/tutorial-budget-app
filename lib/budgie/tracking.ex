@@ -82,6 +82,9 @@ defmodule Budgie.Tracking do
       {:preload, bindings}, query ->
         preload(query, ^bindings)
 
+      {:between, {start_date, end_date}}, query ->
+        where(query, [t], fragment("? BETWEEN ? AND ?", t.effective_date, ^start_date, ^end_date))
+
       _, query ->
         query
     end)

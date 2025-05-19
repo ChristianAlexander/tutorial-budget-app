@@ -142,6 +142,36 @@ defmodule Budgie.TrackingTest do
                expected_transactions
     end
 
+    test "list_transactions/2 filters transactions with between" do
+      budget = insert(:budget)
+
+      _before_transaction =
+        insert(:budget_transaction, budget: budget, effective_date: ~D[2024-12-31])
+
+      start_month_transaction =
+        insert(:budget_transaction, budget: budget, effective_date: ~D[2025-01-01])
+
+      mid_month_transaction =
+        insert(:budget_transaction, budget: budget, effective_date: ~D[2025-01-15])
+
+      end_month_transaction =
+        insert(:budget_transaction, budget: budget, effective_date: ~D[2025-01-31])
+
+      _after_transaction =
+        insert(:budget_transaction, budget: budget, effective_date: ~D[2025-02-01])
+
+      expected_transactions =
+        [
+          start_month_transaction,
+          mid_month_transaction,
+          end_month_transaction
+        ]
+        |> without_preloads()
+
+      assert Tracking.list_transactions(budget, between: {~D[2025-01-01], ~D[2025-01-31]}) ==
+               expected_transactions
+    end
+
     test "create_transaction/1 with valid data creates a transaction" do
       budget = insert(:budget)
 
