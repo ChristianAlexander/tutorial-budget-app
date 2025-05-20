@@ -259,5 +259,38 @@ defmodule Budgie.TrackingTest do
 
       assert Tracking.get_budget_period(period.id) == without_preloads(period)
     end
+
+    test "get_budget_period/2 returns the period if the user and budget matches" do
+      period = insert(:budget_period)
+
+      assert Tracking.get_budget_period(period.id,
+               user: period.budget.creator,
+               budget_id: period.budget_id
+             ) ==
+               without_preloads(period)
+    end
+
+    test "get_budget_period/2 returns nil when the user doesn't have access to the period's budget" do
+      period = insert(:budget_period)
+      user = insert(:user)
+
+      assert is_nil(Tracking.get_budget_period(period.id, user: user))
+    end
+
+    test "get_budget_period/2 returns nil when the budget ID doesn't match the period's budget" do
+      period = insert(:budget_period)
+      budget = insert(:budget)
+
+      assert is_nil(Tracking.get_budget_period(period.id, budget_id: budget.id))
+    end
+
+    test "get_budget_period/2 preloads when requested" do
+      period = insert(:budget_period)
+
+      budget = Tracking.get_budget(period.budget.id)
+      result = Tracking.get_budget_period(period.id, preload: :budget)
+
+      assert result.budget == budget
+    end
   end
 end

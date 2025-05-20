@@ -111,5 +111,27 @@ defmodule Budgie.Tracking do
     end)
   end
 
-  def get_budget_period(id), do: Repo.get(BudgetPeriod, id)
+  def get_budget_period(id, criteria \\ []) do
+    Repo.get(budget_period_query(criteria), id)
+  end
+
+  defp budget_period_query(criteria) do
+    query = from(p in BudgetPeriod)
+
+    Enum.reduce(criteria, query, fn
+      {:user, user}, query ->
+        from p in query,
+          join: b in assoc(p, :budget),
+          where: b.creator_id == ^user.id
+
+      {:budget_id, budget_id}, query ->
+        from p in query, where: p.budget_id == ^budget_id
+
+      {:preload, bindings}, query ->
+        preload(query, ^bindings)
+
+      _, query ->
+        query
+    end)
+  end
 end
