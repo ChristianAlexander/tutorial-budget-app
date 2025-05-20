@@ -133,6 +133,15 @@ defmodule Budgie.Tracking do
     Repo.get(budget_period_query(criteria), id)
   end
 
+  def period_for_transaction(
+        %BudgetTransaction{budget_id: budget_id, effective_date: effective_date},
+        criteria \\ []
+      ) do
+    Keyword.merge(criteria, budget_id: budget_id, during: effective_date)
+    |> budget_period_query()
+    |> Repo.one()
+  end
+
   defp budget_period_query(criteria) do
     query = from(p in BudgetPeriod)
 
@@ -147,6 +156,10 @@ defmodule Budgie.Tracking do
 
       {:preload, bindings}, query ->
         preload(query, ^bindings)
+
+      {:during, date}, query ->
+        from p in query,
+          where: fragment("? BETWEEN ? AND ?", ^date, p.start_date, p.end_date)
 
       _, query ->
         query

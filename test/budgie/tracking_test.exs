@@ -306,5 +306,27 @@ defmodule Budgie.TrackingTest do
 
       assert result.budget == budget
     end
+
+    test "period_for_transaction/1 returns the period overlapping with the provided transaction" do
+      budget = insert(:budget)
+
+      _january =
+        insert(:budget_period,
+          budget: budget,
+          start_date: ~D[2025-01-01],
+          end_date: ~D[2025-01-31]
+        )
+
+      february =
+        insert(:budget_period,
+          budget: budget,
+          start_date: ~D[2025-02-01],
+          end_date: ~D[2025-02-28]
+        )
+
+      transaction = insert(:budget_transaction, budget: budget, effective_date: ~D[2025-02-05])
+
+      assert Tracking.period_for_transaction(transaction) == without_preloads(february)
+    end
   end
 end
