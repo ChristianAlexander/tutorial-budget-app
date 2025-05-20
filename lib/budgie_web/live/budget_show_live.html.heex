@@ -8,7 +8,7 @@
     module={BudgieWeb.TransactionDialog}
     id="transaction"
     budget={@budget}
-    transaction={assigns[:transaction] || default_transaction()}
+    transaction={assigns[:transaction] || default_transaction(@budget)}
     action={@live_action}
   />
 </.modal>

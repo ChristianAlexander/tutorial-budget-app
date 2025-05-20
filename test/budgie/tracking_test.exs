@@ -177,7 +177,8 @@ defmodule Budgie.TrackingTest do
 
       valid_params = params_with_assocs(:budget_transaction, budget: budget)
 
-      assert {:ok, %BudgetTransaction{} = transaction} = Tracking.create_transaction(valid_params)
+      assert {:ok, %BudgetTransaction{} = transaction} =
+               Tracking.create_transaction(budget, valid_params)
 
       assert transaction.type == valid_params.type
       assert transaction.description == valid_params.description
@@ -187,36 +188,49 @@ defmodule Budgie.TrackingTest do
     end
 
     test "create_transaction/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Tracking.create_transaction(@invalid_attrs)
+      budget = insert(:budget)
+      assert {:error, %Ecto.Changeset{}} = Tracking.create_transaction(budget, @invalid_attrs)
     end
 
     test "change_transaction/1 with valid data returns a valid changeset" do
-      valid_params = params_with_assocs(:budget_transaction)
+      budget = build(:budget)
+      valid_params = params_with_assocs(:budget_transaction, budget: budget)
 
       assert %Ecto.Changeset{valid?: true} =
-               Tracking.change_transaction(%BudgetTransaction{}, valid_params)
+               Tracking.change_transaction(
+                 %BudgetTransaction{budget: budget},
+                 valid_params
+               )
     end
 
-    test "change_transaction/1 with invalid data returns an valid changeset" do
+    test "change_transaction/1 with invalid data returns an invalid changeset" do
       assert %Ecto.Changeset{valid?: false} =
-               Tracking.change_transaction(%BudgetTransaction{}, @invalid_attrs)
+               Tracking.change_transaction(
+                 %BudgetTransaction{
+                   budget: build(:budget)
+                 },
+                 @invalid_attrs
+               )
     end
 
     test "change_transaction/1 with negative amount returns an error" do
+      budget = build(:budget)
+
       params =
-        params_with_assocs(:budget_transaction, amount: Decimal.new("-1"))
+        params_with_assocs(:budget_transaction, amount: Decimal.new("-1"), budget: budget)
 
       assert %Ecto.Changeset{valid?: false} =
-               Tracking.change_transaction(%BudgetTransaction{}, params)
+               Tracking.change_transaction(%BudgetTransaction{budget: budget}, params)
     end
 
     test "change_transaction/1 with HUGE amount returns an error" do
+      budget = build(:budget)
+
       params =
-        params_with_assocs(:budget_transaction)
-        |> Map.put(:amount, Decimal.new("9999999"))
+        params_with_assocs(:budget_transaction, budget: budget, amount: Decimal.new("1000000000"))
 
       assert %Ecto.Changeset{valid?: false} =
-               Tracking.change_transaction(%BudgetTransaction{}, params)
+               Tracking.change_transaction(%BudgetTransaction{budget: budget}, params)
     end
 
     test "summarize_budget_transactions/1 doesn't fail without transactions" do

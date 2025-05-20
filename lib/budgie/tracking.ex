@@ -42,15 +42,27 @@ defmodule Budgie.Tracking do
 
   alias Budgie.Tracking.BudgetTransaction
 
-  def create_transaction(attrs \\ %{}) do
+  def create_transaction(%Budget{} = budget, attrs \\ %{}) do
     %BudgetTransaction{}
-    |> BudgetTransaction.changeset(attrs)
+    |> BudgetTransaction.changeset(attrs, budget)
     |> Repo.insert()
   end
 
-  def update_transaction(%BudgetTransaction{} = transaction, attrs) do
+  def update_transaction(
+        %BudgetTransaction{
+          budget: %Budget{} = budget
+        } = transaction,
+        attrs
+      ),
+      do: update_transaction(budget, transaction, attrs)
+
+  def update_transaction(
+        %Budget{} = budget,
+        %BudgetTransaction{} = transaction,
+        attrs
+      ) do
     transaction
-    |> BudgetTransaction.changeset(attrs)
+    |> BudgetTransaction.changeset(attrs, budget)
     |> Repo.update()
   end
 
@@ -91,8 +103,14 @@ defmodule Budgie.Tracking do
     end)
   end
 
-  def change_transaction(budget_transaction, attrs \\ %{}) do
-    BudgetTransaction.changeset(budget_transaction, attrs)
+  def change_transaction(
+        %BudgetTransaction{
+          budget: %Budget{} = budget
+        } = transaction,
+        attrs
+      )
+      when is_map(attrs) do
+    BudgetTransaction.changeset(transaction, attrs, budget)
   end
 
   def summarize_budget_transactions(%Budget{id: budget_id}),

@@ -80,9 +80,10 @@ defmodule BudgieWeb.BudgetShowLive do
     end
   end
 
-  defp default_transaction do
+  defp default_transaction(budget) do
     %BudgetTransaction{
-      effective_date: Date.utc_today()
+      effective_date: Date.utc_today(),
+      budget: budget
     }
   end
 
