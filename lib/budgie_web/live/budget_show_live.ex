@@ -12,15 +12,11 @@ defmodule BudgieWeb.BudgetShowLive do
       )
 
     if budget do
-      transactions =
-        Tracking.list_transactions(budget)
-
       summary = Tracking.summarize_budget_transactions(budget)
 
       {:ok,
        assign(socket,
          budget: budget,
-         transactions: transactions,
          summary: summary
        )
        |> apply_action(params)}
