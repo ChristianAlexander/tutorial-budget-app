@@ -1,5 +1,5 @@
 <.modal
-  :if={@live_action in [:new_transaction, :edit_transaction]}
+  :if={@live_action == :new_transaction}
   id="transaction-modal"
   on_cancel={JS.navigate(~p"/budgets/#{@budget}", replace: true)}
   show
@@ -59,8 +59,9 @@
 </div>
 
 <div class="grid grid-cols-1 gap-4 mt-6">
-  <div
+  <.link
     :for={period <- @budget.periods}
+    navigate={~p"/budgets/#{@budget}/periods/#{period}"}
     class="bg-white rounded shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
   >
     <div class="flex justify-between items-center mb-3">

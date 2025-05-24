@@ -72,8 +72,6 @@ defmodule BudgieWeb.Router do
       live "/budgets/:budget_id/new-transaction", BudgetShowLive, :new_transaction
       live "/budgets/:budget_id/periods/:id", PeriodShowLive
 
-      live "/budgets/:budget_id/transactions/:transaction_id/edit",
-           BudgetShowLive,
       live "/budgets/:budget_id/periods/:id/new-transaction",
            PeriodShowLive,
            :new_transaction
