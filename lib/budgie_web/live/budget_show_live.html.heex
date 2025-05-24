@@ -22,22 +22,28 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div class="space-y-2">
-      <% funding = Map.get(@summary, :funding, Decimal.new("0")) %>
-      <% spending = Map.get(@summary, :spending, Decimal.new("0")) %>
-      <% balance = Decimal.sub(funding, spending) %>
+      <% balance = Map.get(@ending_balances, @current_period_id) || Decimal.new("0") %>
       <div class="flex items-center space-x-2">
         <.icon name="hero-wallet" class="w-4 h-4 text-gray-400" />
-        <span class="text-sm font-medium text-gray-500">Balance</span>
+        <span class="text-sm font-medium text-gray-500">Current Balance</span>
       </div>
       <div>
         <.currency amount={balance} class="text-2xl font-bold" />
       </div>
 
+      <% total_funding = get_in(@summary, [:total, :funding]) || Decimal.new("0") %>
+      <% total_spending = get_in(@summary, [:total, :spending]) || Decimal.new("0") %>
       <div class="grid grid-cols-2 text-gray-500">
-        <div>Funding</div>
-        <div>Spending</div>
-        <div><.currency amount={funding} positive_class="text-gray-400" /></div>
-        <div><.currency amount={Decimal.negate(spending)} negative_class="text-gray-400" /></div>
+        <div>Total Funding</div>
+        <div>Total Spending</div>
+        <div><.currency amount={total_funding} positive_class="text-gray-400" /></div>
+        <div>
+          <.currency
+            amount={Decimal.negate(total_spending)}
+            class="text-gray-400"
+            negative_class="text-gray-400"
+          />
+        </div>
       </div>
     </div>
     <div class="space-y-2">
@@ -64,10 +70,41 @@
     navigate={~p"/budgets/#{@budget}/periods/#{period}"}
     class="bg-white rounded shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
   >
+    <% is_future_period = Date.after?(period.start_date, Date.utc_today()) %>
+    <% ending_balance = Map.get(@ending_balances, period.id) %>
     <div class="flex justify-between items-center mb-3">
       <h3 class="font-medium text-gray-900">
         {period.start_date}
       </h3>
+      <.icon name="hero-chevron-right" class="w-5 h-5 text-gray-400" />
+    </div>
+
+    <div class="space-y-3">
+      <div class="flex justify-between items-baseline">
+        <div class="text-sm text-gray-500">Running Balance</div>
+        <.currency
+          amount={ending_balance}
+          class="text-lg font-semibold"
+          positive_class={if is_future_period, do: "text-gray-400", else: "text-green-600"}
+          negative_class={if is_future_period, do: "text-gray-400", else: "text-red-600"}
+        />
+      </div>
+
+      <% funding_amount = get_in(@summary, [period.id, :funding]) || Decimal.new("0") %>
+      <div :if={Decimal.gt?(funding_amount, 0)} class="flex justify-between items-baseline">
+        <div class="text-sm text-gray-500">Funding</div>
+        <.currency amount={funding_amount} class="text-sm" positive_class="text-gray-500" />
+      </div>
+
+      <% spent_amount = get_in(@summary, [period.id, :spending]) || Decimal.new("0") %>
+      <div :if={Decimal.gt?(spent_amount, 0)} class="flex justify-between items-baseline">
+        <div class="text-sm text-gray-500">Spent</div>
+        <.currency amount={Decimal.negate(spent_amount)} class="text-sm" />
+      </div>
+
+      <div :if={is_future_period} class="mt-2 text-xs text-gray-400 italic">
+        Projected balance including rollovers
+      </div>
     </div>
   </.link>
 </div>

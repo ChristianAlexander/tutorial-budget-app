@@ -119,14 +119,29 @@ defmodule Budgie.Tracking do
   def summarize_budget_transactions(budget_id) do
     query =
       from t in transaction_query(budget: budget_id, order_by: nil),
-        select: [t.type, sum(t.amount)],
-        group_by: t.type
+        join: p in BudgetPeriod,
+        on:
+          t.budget_id == p.budget_id and
+            fragment("? BETWEEN ? AND ?", t.effective_date, p.start_date, p.end_date),
+        select: [p.id, t.type, sum(t.amount)],
+        group_by: fragment("GROUPING SETS ((?, ?), ?)", p.id, t.type, t.type)
 
     query
     |> Repo.all()
-    |> Enum.reduce(%{}, fn [type, amount], summary ->
-      Map.put(summary, type, amount)
-    end)
+    |> Enum.reduce(
+      Map.new(),
+      fn
+        [nil, type, amount], summary ->
+          Map.update(summary, :total, %{type => amount}, fn existing ->
+            Map.put(existing, type, amount)
+          end)
+
+        [period_id, type, amount], summary ->
+          Map.update(summary, period_id, %{type => amount}, fn existing ->
+            Map.put(existing, type, amount)
+          end)
+      end
+    )
   end
 
   def get_budget_period(id, criteria \\ []) do

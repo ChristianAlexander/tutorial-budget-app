@@ -239,24 +239,84 @@ defmodule Budgie.TrackingTest do
       assert Tracking.summarize_budget_transactions(budget) == %{}
     end
 
-    test "returns a summary with funding and spending" do
+    test "returns a summary with funding and spending, by period and with total" do
       budget = insert(:budget)
 
-      spending_transactions = [
-        insert(:budget_transaction, budget: budget, type: :spending, amount: Decimal.new("2")),
-        insert(:budget_transaction, budget: budget, type: :spending, amount: Decimal.new("3"))
+      january =
+        insert(:budget_period,
+          budget: budget,
+          start_date: ~D[2025-01-01],
+          end_date: ~D[2025-01-31]
+        )
+
+      february =
+        insert(:budget_period,
+          budget: budget,
+          start_date: ~D[2025-02-01],
+          end_date: ~D[2025-02-28]
+        )
+
+      _january_spending_transactions = [
+        insert(:budget_transaction,
+          budget: budget,
+          type: :spending,
+          effective_date: ~D[2025-01-15],
+          amount: Decimal.new("2")
+        ),
+        insert(:budget_transaction,
+          budget: budget,
+          type: :spending,
+          effective_date: ~D[2025-01-15],
+          amount: Decimal.new("3")
+        )
       ]
 
-      funding_transactions = [
-        insert(:budget_transaction, budget: budget, type: :funding, amount: Decimal.new("5")),
-        insert(:budget_transaction, budget: budget, type: :funding, amount: Decimal.new("7"))
+      _january_funding_transactions = [
+        insert(:budget_transaction,
+          budget: budget,
+          type: :funding,
+          effective_date: ~D[2025-01-15],
+          amount: Decimal.new("5")
+        ),
+        insert(:budget_transaction,
+          budget: budget,
+          type: :funding,
+          effective_date: ~D[2025-01-15],
+          amount: Decimal.new("7")
+        )
       ]
 
-      assert Tracking.summarize_budget_transactions(budget.id) == %{
-               spending:
-                 Enum.reduce(spending_transactions, Decimal.new("0"), &Decimal.add(&1.amount, &2)),
-               funding:
-                 Enum.reduce(funding_transactions, Decimal.new("0"), &Decimal.add(&1.amount, &2))
+      _february_spending_transaction =
+        insert(:budget_transaction,
+          budget: budget,
+          type: :spending,
+          effective_date: ~D[2025-02-15],
+          amount: Decimal.new("11")
+        )
+
+      _february_funding_transaction =
+        insert(:budget_transaction,
+          budget: budget,
+          type: :funding,
+          effective_date: ~D[2025-02-15],
+          amount: Decimal.new("13")
+        )
+
+      result = Tracking.summarize_budget_transactions(budget.id)
+
+      assert Map.get(result, :total) == %{
+               spending: Decimal.new("16"),
+               funding: Decimal.new("25")
+             }
+
+      assert Map.get(result, january.id) == %{
+               spending: Decimal.new("5"),
+               funding: Decimal.new("12")
+             }
+
+      assert Map.get(result, february.id) == %{
+               spending: Decimal.new("11"),
+               funding: Decimal.new("13")
              }
     end
   end
