@@ -1,5 +1,5 @@
 <.modal
-  :if={@live_action in [:new_transaction, :edit_transaction]}
+  :if={@live_action == :new_transaction}
   id="transaction-modal"
   on_cancel={JS.navigate(~p"/budgets/#{@budget}", replace: true)}
   show
@@ -8,10 +8,19 @@
     module={BudgieWeb.TransactionDialog}
     id="transaction"
     budget={@budget}
-    transaction={assigns[:transaction] || default_transaction()}
+    transaction={assigns[:transaction] || default_transaction(@budget)}
     action={@live_action}
   />
 </.modal>
+
+<div class="mb-6">
+  <.link
+    navigate={~p"/budgets"}
+    class="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-700"
+  >
+    <.icon name="hero-arrow-left-solid" class="h-3 w-3" /> Back to Budgets
+  </.link>
+</div>
 <div class="bg-white rounded border border-gray-100 px-6 py-6">
   <div class="flex justify-between items-center mb-4 space-x-2">
     <div>
@@ -22,22 +31,28 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div class="space-y-2">
-      <% funding = Map.get(@summary, :funding, Decimal.new("0")) %>
-      <% spending = Map.get(@summary, :spending, Decimal.new("0")) %>
-      <% balance = Decimal.sub(funding, spending) %>
+      <% balance = Map.get(@ending_balances, @current_period_id) || Decimal.new("0") %>
       <div class="flex items-center space-x-2">
         <.icon name="hero-wallet" class="w-4 h-4 text-gray-400" />
-        <span class="text-sm font-medium text-gray-500">Balance</span>
+        <span class="text-sm font-medium text-gray-500">Current Balance</span>
       </div>
       <div>
         <.currency amount={balance} class="text-2xl font-bold" />
       </div>
 
+      <% total_funding = get_in(@summary, [:total, :funding]) || Decimal.new("0") %>
+      <% total_spending = get_in(@summary, [:total, :spending]) || Decimal.new("0") %>
       <div class="grid grid-cols-2 text-gray-500">
-        <div>Funding</div>
-        <div>Spending</div>
-        <div><.currency amount={funding} positive_class="text-gray-400" /></div>
-        <div><.currency amount={Decimal.negate(spending)} negative_class="text-gray-400" /></div>
+        <div>Total Funding</div>
+        <div>Total Spending</div>
+        <div><.currency amount={total_funding} positive_class="text-gray-400" /></div>
+        <div>
+          <.currency
+            amount={Decimal.negate(total_spending)}
+            class="text-gray-400"
+            negative_class="text-gray-400"
+          />
+        </div>
       </div>
     </div>
     <div class="space-y-2">
@@ -59,38 +74,46 @@
 </div>
 
 <div class="grid grid-cols-1 gap-4 mt-6">
-  <div
+  <.link
     :for={period <- @budget.periods}
+    navigate={~p"/budgets/#{@budget}/periods/#{period}"}
     class="bg-white rounded shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
   >
+    <% is_future_period = Date.after?(period.start_date, Date.utc_today()) %>
+    <% ending_balance = Map.get(@ending_balances, period.id) %>
     <div class="flex justify-between items-center mb-3">
       <h3 class="font-medium text-gray-900">
         {period.start_date}
       </h3>
+      <.icon name="hero-chevron-right" class="w-5 h-5 text-gray-400" />
     </div>
-  </div>
+
+    <div class="space-y-3">
+      <div class="flex justify-between items-baseline">
+        <div class="text-sm text-gray-500">Running Balance</div>
+        <.currency
+          amount={ending_balance}
+          class="text-lg font-semibold"
+          positive_class={if is_future_period, do: "text-gray-400", else: "text-green-600"}
+          negative_class={if is_future_period, do: "text-gray-400", else: "text-red-600"}
+        />
+      </div>
+
+      <% funding_amount = get_in(@summary, [period.id, :funding]) || Decimal.new("0") %>
+      <div :if={Decimal.gt?(funding_amount, 0)} class="flex justify-between items-baseline">
+        <div class="text-sm text-gray-500">Funding</div>
+        <.currency amount={funding_amount} class="text-sm" positive_class="text-gray-500" />
+      </div>
+
+      <% spent_amount = get_in(@summary, [period.id, :spending]) || Decimal.new("0") %>
+      <div :if={Decimal.gt?(spent_amount, 0)} class="flex justify-between items-baseline">
+        <div class="text-sm text-gray-500">Spent</div>
+        <.currency amount={Decimal.negate(spent_amount)} class="text-sm" />
+      </div>
+
+      <div :if={is_future_period} class="mt-2 text-xs text-gray-400 italic">
+        Projected balance including rollovers
+      </div>
+    </div>
+  </.link>
 </div>
-<.table id="transactions" rows={@transactions}>
-  <:col :let={transaction} label="Description">{transaction.description}</:col>
-  <:col :let={transaction} label="Date">{transaction.effective_date}</:col>
-  <:col :let={transaction} label="Amount"><.transaction_amount transaction={transaction} /></:col>
-  <:col :let={transaction} label="Actions">
-    <.dropdown_menu id={"#{transaction.id}-menu"}>
-      <.link
-        navigate={~p"/budgets/#{@budget}/transactions/#{transaction}/edit"}
-        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-      >
-        <.icon name="hero-pencil" class="w-4 h-4" /> Edit Transaction
-      </.link>
-      <button
-        type="button"
-        phx-click="delete_transaction"
-        phx-value-id={transaction.id}
-        data-confirm="Are you sure you want to delete the transaction?"
-        class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-      >
-        <.icon name="hero-trash" class="w-4 h-4" /> Delete Transaction
-      </button>
-    </.dropdown_menu>
-  </:col>
-</.table>

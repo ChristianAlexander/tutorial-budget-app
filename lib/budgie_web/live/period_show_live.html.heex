@@ -1,0 +1,93 @@
+<.modal
+  :if={@live_action in [:new_transaction, :edit_transaction]}
+  id="transaction-modal"
+  on_cancel={JS.navigate(~p"/budgets/#{@period.budget}/periods/#{@period}", replace: true)}
+  show
+>
+  <.live_component
+    module={BudgieWeb.TransactionDialog}
+    id="transaction"
+    budget={@period.budget}
+    transaction={assigns[:transaction] || default_transaction(assigns)}
+    action={@live_action}
+  />
+</.modal>
+<div class="max-w-xl mx-auto bg-white rounded border border-gray-100 p-6">
+  <div class="flex items-center justify-between mb-6">
+    <div class="mx-2 w-5" />
+    <h2 class="text-xl font-semibold">
+      {@period.start_date} to {@period.end_date}
+    </h2>
+    <div class="mx-2 w-5" />
+  </div>
+
+  <div class="text-center mb-8">
+    <.link navigate={~p"/budgets/#{@period.budget}"} class="text-xl font-semibold underline">
+      {@period.budget.name}
+    </.link>
+    <p :if={@period.budget.description} class="text-gray-600 mt-1">
+      {@period.budget.description}
+    </p>
+  </div>
+
+  <div
+    :if={not Enum.empty?(@transactions)}
+    class="grid grid-cols-1 gap-3 divide-y divide-gray-100"
+  >
+    <div :for={transaction <- @transactions} class="flex justify-between items-center pt-3">
+      <div>
+        <div class="font-medium">{transaction.description}</div>
+        <div class="text-sm text-gray-500">
+          {transaction.effective_date}
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <.transaction_amount transaction={transaction} />
+        <.dropdown_menu id={"#{transaction.id}-menu"}>
+          <.link
+            navigate={
+              ~p"/budgets/#{@period.budget}/periods/#{@period}/transactions/#{transaction}/edit"
+            }
+            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+          >
+            <.icon name="hero-pencil" class="w-4 h-4" /> Edit Transaction
+          </.link>
+          <button
+            type="button"
+            phx-click="delete_transaction"
+            phx-value-id={transaction.id}
+            data-confirm="Are you sure you want to delete the transaction?"
+            class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+          >
+            <.icon name="hero-trash" class="w-4 h-4" /> Delete Transaction
+          </button>
+        </.dropdown_menu>
+      </div>
+    </div>
+    <div class="flex justify-between items-center pt-3 text-gray-500">
+      <.link
+        navigate={~p"/budgets/#{@period.budget}/periods/#{@period}/new-transaction"}
+        class="flex items-center gap-2 text-blue-600 hover:underline"
+      >
+        <.icon name="hero-plus" class="w-4 h-4" />
+        <span>Add Transaction</span>
+      </.link>
+    </div>
+  </div>
+
+  <div :if={Enum.empty?(@transactions)} class="py-12 text-center">
+    <div class="mb-3 text-gray-400">
+      <.icon name="hero-credit-card" class="w-8 h-8 mx-auto" />
+    </div>
+    <p class="text-gray-500 mb-2">No transactions yet</p>
+    <p class="text-sm text-gray-400">Transactions will appear here when you add them</p>
+
+    <.link
+      navigate={~p"/budgets/#{@period.budget}/periods/#{@period}/new-transaction"}
+      class="bg-blue-100 text-blue-800 hover:bg-blue-200 px-3 py-2 mt-6 rounded-lg inline-flex items-center gap-2"
+    >
+      <.icon name="hero-plus" class="h-5 w-5" />
+      <span>New Transaction</span>
+    </.link>
+  </div>
+</div>

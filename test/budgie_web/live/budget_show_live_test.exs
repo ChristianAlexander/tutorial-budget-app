@@ -1,15 +1,17 @@
 defmodule BudgieWeb.BudgetShowLiveTest do
   use BudgieWeb.ConnCase, async: true
 
-  alias Budgie.Repo
-  alias Budgie.Tracking.BudgetTransaction
+  alias BudgieWeb.BudgetShowLive
 
   import Phoenix.LiveViewTest
 
   setup do
     budget = insert(:budget)
 
-    %{budget: budget, user: budget.creator}
+    period =
+      insert(:budget_period, budget: budget, start_date: ~D[2025-01-01], end_date: ~D[2025-01-31])
+
+    %{budget: budget, user: budget.creator, period: period}
   end
 
   describe "Show budget" do
@@ -132,141 +134,70 @@ defmodule BudgieWeb.BudgetShowLiveTest do
     end
   end
 
-  describe "Edit transaction modal" do
-    setup %{budget: budget} do
-      transaction = insert(:budget_transaction, budget: budget)
-
-      %{transaction: transaction}
+  describe "calculate_ending_balances/2" do
+    test "does not crash with empty period list" do
+      assert %{} = BudgetShowLive.calculate_ending_balances([], %{})
     end
 
-    test "shows edit transaction modal", %{
-      conn: conn,
-      user: user,
-      budget: budget,
-      transaction: transaction
-    } do
-      conn = log_in_user(conn, user)
-      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/transactions/#{transaction}/edit")
+    test "correctly calculates ending balances across four periods with sparse data" do
+      periods = insert_list(4, :budget_period)
+      [p1, p2, p3, p4] = periods
 
-      assert has_element?(lv, "#transaction-modal")
+      summary = %{
+        p1.id => %{
+          funding: Decimal.new("7"),
+          spending: Decimal.new("2")
+        },
+        p3.id => %{
+          funding: Decimal.new("5")
+        },
+        p4.id => %{
+          spending: Decimal.new("3")
+        }
+      }
 
-      assert has_element?(
-               lv,
-               ~s|#transaction-modal input[name='transaction[description]'][value='#{transaction.description}']|
-             )
-    end
+      balances = BudgetShowLive.calculate_ending_balances(periods, summary)
 
-    test "redirects on invalid transaction id", %{conn: conn, user: user, budget: budget} do
-      conn = log_in_user(conn, user)
-
-      {:ok, conn} =
-        live(conn, ~p"/budgets/#{budget}/transactions/invalid/edit")
-        |> follow_redirect(conn, ~p"/budgets/#{budget}")
-
-      assert %{"error" => "Transaction not found"} = conn.assigns.flash
-    end
-
-    test "validation errors are presented when form is changed with invalid input", %{
-      conn: conn,
-      user: user,
-      budget: budget,
-      transaction: transaction
-    } do
-      conn = log_in_user(conn, user)
-      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/transactions/#{transaction}/edit")
-
-      params = params_for(:budget_transaction, amount: Decimal.new("-42"))
-
-      form =
-        form(lv, "#transaction-modal form", %{
-          "transaction" => params
-        })
-
-      html = render_change(form)
-
-      assert html =~ "must be greater than 0"
-    end
-
-    test "validation errors are presented when form is submitted with invalid input", %{
-      conn: conn,
-      user: user,
-      budget: budget,
-      transaction: transaction
-    } do
-      conn = log_in_user(conn, user)
-      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/transactions/#{transaction}/edit")
-
-      params = params_for(:budget_transaction, amount: Decimal.new("-42"))
-
-      form =
-        form(lv, "#transaction-modal form", %{
-          "transaction" => params
-        })
-
-      html = render_submit(form)
-
-      assert html =~ "must be greater than 0"
-    end
-
-    test "updates transaction", %{
-      conn: conn,
-      user: user,
-      budget: budget,
-      transaction: transaction
-    } do
-      conn = log_in_user(conn, user)
-      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/transactions/#{transaction}/edit")
-
-      new_amount = (:rand.uniform(5000) / 100) |> Decimal.from_float()
-
-      params = params_for(:budget_transaction, amount: new_amount)
-
-      form =
-        form(lv, "#transaction-modal form", %{
-          "transaction" => params
-        })
-
-      {:ok, _lv, html} =
-        render_submit(form)
-        |> follow_redirect(conn)
-
-      assert html =~ "Transaction updated"
-
-      transaction = Repo.get(BudgetTransaction, transaction.id)
-      assert transaction.amount == new_amount
+      assert Map.get(balances, p1.id) == Decimal.new("5")
+      assert Map.get(balances, p2.id) == Decimal.new("5")
+      assert Map.get(balances, p3.id) == Decimal.new("10")
+      assert Map.get(balances, p4.id) == Decimal.new("7")
     end
   end
 
-  describe "Delete transaction" do
-    setup %{budget: budget} do
-      transaction = insert(:budget_transaction, budget: budget)
+  describe "current_period_id/2" do
+    setup do
+      january_2025 = build(:budget_period, start_date: ~D[2025-01-01], end_date: ~D[2025-01-31])
+      february_2025 = build(:budget_period, start_date: ~D[2025-02-01], end_date: ~D[2025-02-28])
+      march_2025 = build(:budget_period, start_date: ~D[2025-03-01], end_date: ~D[2025-03-31])
 
-      %{transaction: transaction}
+      %{periods: [january_2025, february_2025, march_2025]}
     end
 
-    test "deletes transaction", %{
-      conn: conn,
-      user: user,
-      budget: budget,
-      transaction: transaction
-    } do
-      conn = log_in_user(conn, user)
-      {:ok, lv, html} = live(conn, ~p"/budgets/#{budget}")
+    test "returns nil with no periods" do
+      assert BudgetShowLive.current_period_id([], ~D[2024-12-31]) == nil
+    end
 
-      assert html =~ transaction.description
+    test "returns nil if first period hasn't started yet", %{periods: periods} do
+      assert BudgetShowLive.current_period_id(periods, ~D[2024-12-31]) == nil
+    end
 
-      delete_button =
-        element(
-          lv,
-          ~s|button[phx-click="delete_transaction"][phx-value-id="#{transaction.id}"]|
-        )
+    test "returns the january if date is in january", %{periods: periods} do
+      [january | _rest] = periods
 
-      {:ok, _lv, html} =
-        render_click(delete_button)
-        |> follow_redirect(conn, ~p"/budgets/#{budget}")
+      assert BudgetShowLive.current_period_id(periods, ~D[2025-01-15]) == january.id
+    end
 
-      refute html =~ transaction.description
-      assert html =~ "Transaction deleted"
+    test "returns the february if date is february first", %{periods: periods} do
+      [_january, february, _march] = periods
+
+      assert BudgetShowLive.current_period_id(periods, ~D[2025-02-01]) == february.id
+    end
+
+    test "returns last period if date is after last period", %{periods: periods} do
+      [_january, _february, march] = periods
+
+      assert BudgetShowLive.current_period_id(periods, ~D[2025-04-01]) == march.id
     end
   end
 end

@@ -3,6 +3,7 @@ defmodule Budgie.Tracking do
 
   alias Budgie.Repo
   alias Budgie.Tracking.Budget
+  alias Budgie.Tracking.BudgetPeriod
 
   def create_budget(attrs \\ %{}) do
     %Budget{}
@@ -41,15 +42,27 @@ defmodule Budgie.Tracking do
 
   alias Budgie.Tracking.BudgetTransaction
 
-  def create_transaction(attrs \\ %{}) do
+  def create_transaction(%Budget{} = budget, attrs \\ %{}) do
     %BudgetTransaction{}
-    |> BudgetTransaction.changeset(attrs)
+    |> BudgetTransaction.changeset(attrs, budget)
     |> Repo.insert()
   end
 
-  def update_transaction(%BudgetTransaction{} = transaction, attrs) do
+  def update_transaction(
+        %BudgetTransaction{
+          budget: %Budget{} = budget
+        } = transaction,
+        attrs
+      ),
+      do: update_transaction(budget, transaction, attrs)
+
+  def update_transaction(
+        %Budget{} = budget,
+        %BudgetTransaction{} = transaction,
+        attrs
+      ) do
     transaction
-    |> BudgetTransaction.changeset(attrs)
+    |> BudgetTransaction.changeset(attrs, budget)
     |> Repo.update()
   end
 
@@ -82,13 +95,22 @@ defmodule Budgie.Tracking do
       {:preload, bindings}, query ->
         preload(query, ^bindings)
 
+      {:between, {start_date, end_date}}, query ->
+        where(query, [t], fragment("? BETWEEN ? AND ?", t.effective_date, ^start_date, ^end_date))
+
       _, query ->
         query
     end)
   end
 
-  def change_transaction(budget_transaction, attrs \\ %{}) do
-    BudgetTransaction.changeset(budget_transaction, attrs)
+  def change_transaction(
+        %BudgetTransaction{
+          budget: %Budget{} = budget
+        } = transaction,
+        attrs
+      )
+      when is_map(attrs) do
+    BudgetTransaction.changeset(transaction, attrs, budget)
   end
 
   def summarize_budget_transactions(%Budget{id: budget_id}),
@@ -97,13 +119,65 @@ defmodule Budgie.Tracking do
   def summarize_budget_transactions(budget_id) do
     query =
       from t in transaction_query(budget: budget_id, order_by: nil),
-        select: [t.type, sum(t.amount)],
-        group_by: t.type
+        join: p in BudgetPeriod,
+        on:
+          t.budget_id == p.budget_id and
+            fragment("? BETWEEN ? AND ?", t.effective_date, p.start_date, p.end_date),
+        select: [p.id, t.type, sum(t.amount)],
+        group_by: fragment("GROUPING SETS ((?, ?), ?)", p.id, t.type, t.type)
 
     query
     |> Repo.all()
-    |> Enum.reduce(%{}, fn [type, amount], summary ->
-      Map.put(summary, type, amount)
+    |> Enum.reduce(
+      Map.new(),
+      fn
+        [nil, type, amount], summary ->
+          Map.update(summary, :total, %{type => amount}, fn existing ->
+            Map.put(existing, type, amount)
+          end)
+
+        [period_id, type, amount], summary ->
+          Map.update(summary, period_id, %{type => amount}, fn existing ->
+            Map.put(existing, type, amount)
+          end)
+      end
+    )
+  end
+
+  def get_budget_period(id, criteria \\ []) do
+    Repo.get(budget_period_query(criteria), id)
+  end
+
+  def period_for_transaction(
+        %BudgetTransaction{budget_id: budget_id, effective_date: effective_date},
+        criteria \\ []
+      ) do
+    Keyword.merge(criteria, budget_id: budget_id, during: effective_date)
+    |> budget_period_query()
+    |> Repo.one()
+  end
+
+  defp budget_period_query(criteria) do
+    query = from(p in BudgetPeriod)
+
+    Enum.reduce(criteria, query, fn
+      {:user, user}, query ->
+        from p in query,
+          join: b in assoc(p, :budget),
+          where: b.creator_id == ^user.id
+
+      {:budget_id, budget_id}, query ->
+        from p in query, where: p.budget_id == ^budget_id
+
+      {:preload, bindings}, query ->
+        preload(query, ^bindings)
+
+      {:during, date}, query ->
+        from p in query,
+          where: fragment("? BETWEEN ? AND ?", ^date, p.start_date, p.end_date)
+
+      _, query ->
+        query
     end)
   end
 end
