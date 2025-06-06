@@ -34,7 +34,10 @@ defmodule Budgie.Tracking do
 
     Enum.reduce(criteria, query, fn
       {:user, user}, query ->
-        from b in query, where: b.creator_id == ^user.id
+        from b in query,
+          left_join: c in assoc(b, :collaborators),
+          where: b.creator_id == ^user.id or c.user_id == ^user.id,
+          distinct: true
 
       {:preload, bindings}, query ->
         preload(query, ^bindings)
@@ -177,7 +180,9 @@ defmodule Budgie.Tracking do
       {:user, user}, query ->
         from p in query,
           join: b in assoc(p, :budget),
-          where: b.creator_id == ^user.id
+          left_join: c in assoc(b, :collaborators),
+          where: b.creator_id == ^user.id or c.user_id == ^user.id,
+          distinct: true
 
       {:budget_id, budget_id}, query ->
         from p in query, where: p.budget_id == ^budget_id

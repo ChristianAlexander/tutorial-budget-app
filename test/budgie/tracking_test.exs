@@ -75,6 +75,21 @@ defmodule Budgie.TrackingTest do
       assert Tracking.list_budgets(user: budget.creator) == [without_preloads(budget)]
     end
 
+    test "list_budgets/1 includes budgets where the user is a collaborator" do
+      user = insert(:user)
+      budget = insert(:budget, creator: user)
+      collaborating_budget = insert(:budget)
+      other_budget = insert(:budget)
+
+      insert(:budget_collaborator, budget: collaborating_budget, user: user)
+
+      budgets = Tracking.list_budgets(user: user)
+
+      assert without_preloads(budget) in budgets
+      assert without_preloads(collaborating_budget) in budgets
+      refute other_budget in budgets
+    end
+
     test "get_budget/1 returns the budget with given id" do
       budget = insert(:budget) |> without_preloads()
 
@@ -344,6 +359,16 @@ defmodule Budgie.TrackingTest do
                without_preloads(period)
     end
 
+    test "get_budget_period/2 returns the budget_period with given id when the user is a collaborator" do
+      budget_period = insert(:budget_period)
+      user = insert(:user)
+
+      insert(:budget_collaborator, budget: budget_period.budget, user: user)
+
+      assert Tracking.get_budget_period(budget_period.id, user: user) ==
+               without_preloads(budget_period)
+    end
+
     test "get_budget_period/2 returns nil when the user doesn't have access to the period's budget" do
       period = insert(:budget_period)
       user = insert(:user)
@@ -365,6 +390,15 @@ defmodule Budgie.TrackingTest do
       result = Tracking.get_budget_period(period.id, preload: :budget)
 
       assert result.budget == budget
+    end
+
+    test "get_budget_period/2 returns nil with given id when user doesn't match" do
+      budget_period = insert(:budget_period)
+      other_user = insert(:user)
+
+      _unrelated_collaborator = insert(:budget_collaborator, budget: budget_period.budget)
+
+      assert is_nil(Tracking.get_budget_period(budget_period.id, user: other_user))
     end
 
     test "period_for_transaction/1 returns the period overlapping with the provided transaction" do
