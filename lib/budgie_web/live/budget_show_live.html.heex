@@ -12,7 +12,20 @@
     action={@live_action}
   />
 </.modal>
-
+<.modal
+  :if={@live_action == :collaborators}
+  id="collaborators-modal"
+  on_cancel={JS.navigate(~p"/budgets/#{@budget}", replace: true)}
+  show
+>
+  <.live_component
+    module={BudgieWeb.Budgets.CollaboratorsDialog}
+    id="collaborators-dialog"
+    budget={@budget}
+    current_user={@current_user}
+    join_link={@join_link}
+  />
+</.modal>
 <div class="mb-6">
   <.link
     navigate={~p"/budgets"}
@@ -69,6 +82,25 @@
           <span>New Transaction</span>
         </.link>
       </div>
+    </div>
+    
+    <div class="space-y-2">
+      <div class="flex items-center space-x-2">
+        <.icon name="hero-users" class="w-4 h-4 text-gray-400" />
+        <span class="text-sm font-medium text-gray-500">Collaboration</span>
+      </div>
+
+      <.link
+        navigate={~p"/budgets/#{@budget}/collaborators"}
+        class="inline-flex items-center bg-gray-100 text-gray-800 hover:bg-gray-200 px-3 py-2 rounded-lg gap-2"
+      >
+        <.icon name="hero-user-plus" class="w-5 h-5" />
+        {ngettext(
+          "One collaborator",
+          "%{count} collaborators",
+          Enum.count(@budget.collaborators)
+        )}
+      </.link>
     </div>
   </div>
 </div>
