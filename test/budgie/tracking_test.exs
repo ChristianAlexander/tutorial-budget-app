@@ -389,4 +389,26 @@ defmodule Budgie.TrackingTest do
       assert Tracking.period_for_transaction(transaction) == without_preloads(february)
     end
   end
+
+  describe "budget_join_links" do
+    alias Budgie.Tracking.BudgetJoinLink
+
+    setup do
+      budget = insert(:budget)
+      %{budget: budget}
+    end
+
+    test "creates a join link", %{budget: budget} do
+      assert {:ok, %BudgetJoinLink{} = join_link} = Tracking.ensure_join_link(budget)
+      assert join_link.budget_id == budget.id
+    end
+
+    test "returns existing join link if it already exists", %{budget: budget} do
+      existing_link = insert(:budget_join_link, budget: budget)
+
+      assert {:ok, %BudgetJoinLink{} = join_link} = Tracking.ensure_join_link(budget)
+      assert join_link.budget_id == budget.id
+      assert join_link.code == existing_link.code
+    end
+  end
 end
