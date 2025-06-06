@@ -3,6 +3,7 @@ defmodule Budgie.Tracking do
 
   alias Budgie.Repo
   alias Budgie.Tracking.Budget
+  alias Budgie.Tracking.BudgetCollaborator
   alias Budgie.Tracking.BudgetJoinLink
   alias Budgie.Tracking.BudgetPeriod
 
@@ -201,5 +202,18 @@ defmodule Budgie.Tracking do
       conflict_target: :budget_id,
       returning: true
     )
+  end
+
+  def ensure_budget_collaborator(%Budget{id: budget_id}, %Budgie.Accounts.User{id: user_id}) do
+    %BudgetCollaborator{}
+    |> BudgetCollaborator.changeset(%{budget_id: budget_id, user_id: user_id})
+    |> Repo.insert(
+      conflict_target: [:budget_id, :user_id],
+      on_conflict: {:replace, [:updated_at]}
+    )
+  end
+
+  def remove_budget_collaborator(%BudgetCollaborator{} = collaborator) do
+    Repo.delete(collaborator)
   end
 end

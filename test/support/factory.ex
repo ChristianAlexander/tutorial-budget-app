@@ -54,4 +54,11 @@ defmodule Budgie.Factory do
       budget: build(:budget)
     }
   end
+
+  def budget_collaborator_factory do
+    %Tracking.BudgetCollaborator{
+      user: build(:user),
+      budget: build(:budget)
+    }
+  end
 end

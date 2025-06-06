@@ -423,4 +423,39 @@ defmodule Budgie.TrackingTest do
       assert is_nil(Tracking.get_budget_by_join_code("invalid"))
     end
   end
+
+  describe "budget_collaborators" do
+    test "creates a collaborator given a budget and a user" do
+      budget = insert(:budget)
+      other_user = insert(:user)
+
+      assert {:ok, collaborator} = Tracking.ensure_budget_collaborator(budget, other_user)
+
+      budget = Repo.preload(budget, :collaborators)
+
+      assert budget.collaborators == [collaborator]
+    end
+
+    test "no-ops given an existing collaborator" do
+      budget = insert(:budget)
+      collaborator = insert(:budget_collaborator, budget: budget)
+
+      assert {:ok, collaborator} =
+               Tracking.ensure_budget_collaborator(budget, collaborator.user)
+
+      budget = Repo.preload(budget, :collaborators)
+
+      assert budget.collaborators == [collaborator]
+    end
+
+    test "remove_budget_collaborator deletes a collaborator" do
+      collaborator = insert(:budget_collaborator)
+
+      assert Tracking.remove_budget_collaborator(collaborator)
+
+      budget = Repo.preload(collaborator.budget, :collaborators, force: true)
+
+      assert budget.collaborators == []
+    end
+  end
 end
