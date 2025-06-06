@@ -89,6 +89,7 @@ defmodule BudgieWeb.Router do
     pipe_through [:browser]
 
     delete "/users/log_out", UserSessionController, :delete
+    get "/join/:code", JoinController, :show_invitation
 
     live_session :current_user,
       on_mount: [{BudgieWeb.UserAuth, :mount_current_user}] do

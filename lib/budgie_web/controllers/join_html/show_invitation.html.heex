@@ -1,0 +1,30 @@
+<div class="max-w-md mx-auto sm:mt-12">
+  <div class="bg-white border border-gray-200 sm:rounded-md">
+    <div class="px-4 py-5 sm:p-6">
+      <div class="text-center">
+        <h2 class="text-lg font-medium text-gray-900">
+          Collaborate on {@budget.creator.name}’s budget
+        </h2>
+        <div class="mt-4 space-y-1">
+          <p class="text-xl font-semibold text-gray-900">
+            {@budget.name}
+          </p>
+          <p :if={@budget.description} class="text-sm text-gray-500">
+            {@budget.description}
+          </p>
+        </div>
+      </div>
+      <div :if={@current_user} class="mt-6 flex justify-center">
+        <div class="inline-flex items-center justify-center rounded-lg bg-gray-50 w-full py-3">
+          <div class="ml-3 text-center">
+            <div class="text-sm text-gray-600">Joining as</div>
+            <div class="text-sm text-gray-900">{@current_user.email}</div>
+          </div>
+        </div>
+      </div>
+      <p :if={is_nil(@current_user)} class="mt-4 text-sm text-gray-500">
+        You'll need to create an account or sign in to collaborate
+      </p>
+    </div>
+  </div>
+</div>
