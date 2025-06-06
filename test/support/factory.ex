@@ -48,4 +48,17 @@ defmodule Budgie.Factory do
       type: :spending
     }
   end
+
+  def budget_join_link_factory do
+    %Tracking.BudgetJoinLink{
+      budget: build(:budget)
+    }
+  end
+
+  def budget_collaborator_factory do
+    %Tracking.BudgetCollaborator{
+      user: build(:user),
+      budget: build(:budget)
+    }
+  end
 end

@@ -134,6 +134,106 @@ defmodule BudgieWeb.BudgetShowLiveTest do
     end
   end
 
+  describe "Collaborators modal" do
+    setup %{user: user} do
+      budget = insert(:budget, creator: user)
+
+      %{budget: budget}
+    end
+
+    test "redirects to login page when not signed in", %{conn: conn, budget: budget} do
+      assert {:error, redirect} = live(conn, ~p"/budgets/#{budget}/collaborators")
+
+      assert {:redirect, %{to: path, flash: flash}} = redirect
+      assert path == ~p"/users/log_in"
+      assert %{"error" => "You must log in to access this page."} = flash
+    end
+
+    test "modal is presented", %{conn: conn, user: user, budget: budget} do
+      conn = log_in_user(conn, user)
+      {:ok, lv, html} = live(conn, ~p"/budgets/#{budget}/collaborators")
+
+      assert has_element?(lv, "#collaborators-modal")
+      assert html =~ "Manage Access"
+      assert html =~ user.name
+    end
+
+    test "modal shows collaborators", %{conn: conn, user: user, budget: budget} do
+      collaborators = insert_list(3, :budget_collaborator, budget: budget)
+
+      conn = log_in_user(conn, user)
+      {:ok, _lv, html} = live(conn, ~p"/budgets/#{budget}/collaborators")
+
+      assert html =~ "Collaborators (3)"
+      assert html =~ user.name
+
+      for collaborator <- collaborators do
+        assert html =~ collaborator.user.name
+        assert html =~ collaborator.user.email
+      end
+    end
+
+    test "removes collaborator when clicked", %{conn: conn, user: user, budget: budget} do
+      [collaborator_one, collaborator_two] = insert_list(2, :budget_collaborator, budget: budget)
+
+      conn = log_in_user(conn, user)
+      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/collaborators")
+
+      remove_button =
+        element(
+          lv,
+          "button[phx-click='remove-collaborator'][phx-value-user-id='#{collaborator_two.user_id}']"
+        )
+
+      html = render_click(remove_button)
+
+      assert html =~ collaborator_one.user.name
+      refute html =~ collaborator_two.user.name
+    end
+
+    test "removes, informs, and redirects collaborator when they remove self", %{
+      conn: conn,
+      budget: budget
+    } do
+      collaborator = insert(:budget_collaborator, budget: budget)
+
+      conn = log_in_user(conn, collaborator.user)
+      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/collaborators")
+
+      remove_button =
+        element(
+          lv,
+          "button[phx-click='remove-collaborator'][phx-value-user-id='#{collaborator.user_id}']"
+        )
+
+      {:ok, _lv, html} = render_click(remove_button) |> follow_redirect(conn, ~p"/budgets")
+
+      assert html =~ "You have been removed from the budget"
+
+      # Assert collaborator was removed
+      refute Budgie.Repo.get_by(Budgie.Tracking.BudgetCollaborator,
+               user_id: collaborator.user_id,
+               budget_id: budget.id
+             )
+    end
+
+    test "changes text to copied on click of copy link button", %{
+      conn: conn,
+      user: user,
+      budget: budget
+    } do
+      conn = log_in_user(conn, user)
+      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/collaborators")
+
+      copy_button = element(lv, "button", "Copy Link")
+
+      render_click(copy_button)
+
+      refute has_element?(lv, "button", "Copy Link")
+      assert has_element?(lv, "button", "Copied")
+    end
+  end
+
   describe "calculate_ending_balances/2" do
     test "does not crash with empty period list" do
       assert %{} = BudgetShowLive.calculate_ending_balances([], %{})

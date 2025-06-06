@@ -64,11 +64,14 @@ defmodule BudgieWeb.Router do
   scope "/", BudgieWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    post "/join/:code", JoinController, :join
+
     live_session :require_authenticated_user,
       on_mount: [{BudgieWeb.UserAuth, :ensure_authenticated}] do
       live "/budgets", BudgetListLive
       live "/budgets/new", BudgetListLive, :new
       live "/budgets/:budget_id", BudgetShowLive
+      live "/budgets/:budget_id/collaborators", BudgetShowLive, :collaborators
       live "/budgets/:budget_id/new-transaction", BudgetShowLive, :new_transaction
       live "/budgets/:budget_id/periods/:id", PeriodShowLive
 
@@ -89,6 +92,7 @@ defmodule BudgieWeb.Router do
     pipe_through [:browser]
 
     delete "/users/log_out", UserSessionController, :delete
+    get "/join/:code", JoinController, :show_invitation
 
     live_session :current_user,
       on_mount: [{BudgieWeb.UserAuth, :mount_current_user}] do

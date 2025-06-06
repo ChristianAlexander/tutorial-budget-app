@@ -1,0 +1,91 @@
+<div class="max-h-[80vh] flex flex-col">
+  <div class="p-6 pb-0">
+    <h2 class="text-2xl font-bold text-gray-900">
+      Manage Access
+    </h2>
+  </div>
+
+  <div class="flex-1 overflow-y-auto min-h-0">
+    <div class="p-6 space-y-6">
+      <div class="space-y-3">
+        <h3 class="text-sm font-medium text-gray-700">Owner</h3>
+        <div class="flex items-center justify-between py-2">
+          <div class="flex items-center gap-3">
+            <div>
+              <p class="text-sm text-gray-900">{@budget.creator.name}</p>
+              <p class="text-xs text-gray-500">Owner</p>
+            </div>
+          </div>
+
+          <span
+            :if={@current_user.id == @budget.creator_id}
+            class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+          >
+            You
+          </span>
+        </div>
+      </div>
+      <div :if={not Enum.empty?(@budget.collaborators)} class="space-y-3">
+        <h3 class="text-sm font-medium text-gray-700">
+          Collaborators ({Enum.count(@budget.collaborators)})
+        </h3>
+        <div class="space-y-1">
+          <div
+            :for={collaborator <- @budget.collaborators}
+            class="flex items-center justify-between py-2"
+          >
+            <div class="flex items-center gap-3">
+              <div>
+                <p class="text-sm text-gray-900 break-all">
+                  {collaborator.user.name} ({collaborator.user.email})
+                </p>
+                <p class="text-xs text-gray-500">
+                  Added {collaborator.user.inserted_at}
+                </p>
+              </div>
+            </div>
+            <span
+              :if={collaborator.user_id == @current_user.id}
+              class="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+            >
+              You
+            </span>
+            <button
+              phx-click="remove-collaborator"
+              phx-value-user-id={collaborator.user_id}
+              class="text-gray-400 hover:text-gray-600 px-2 py-1"
+            >
+              <.icon name="hero-x-mark" class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-none border-t p-4 sm:p-6">
+    <h3 class="text-sm font-medium text-gray-700 mb-4">Invite</h3>
+    <p class="text-sm text-gray-600 mb-2">Anyone with the invitation link can join</p>
+    <div class="flex gap-4">
+      <div class="relative flex-1">
+        <input
+          id="join-link-text"
+          type="text"
+          value={url(~p"/join/#{@join_link.code}")}
+          readonly
+          class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-500 cursor-default focus:ring-0 focus:border-gray-200"
+        />
+        <.icon name="hero-link" class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+      </div>
+      <button
+        phx-click={
+          JS.dispatch("copy-to-clipboard", to: "#join-link-text")
+          |> JS.push("copied", target: @myself)
+        }
+        class="px-3 py-2 text-blue-600 hover:text-blue-700 text-sm font-medium whitespace-nowrap border border-gray-200 rounded-lg hover:bg-gray-50"
+      >
+        {if @link_copied, do: "Copied", else: "Copy Link"}
+      </button>
+    </div>
+  </div>
+</div>
