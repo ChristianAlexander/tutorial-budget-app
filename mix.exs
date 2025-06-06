@@ -67,7 +67,8 @@ defmodule Budgie.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:ex_machina, "~> 2.8.0", only: :test},
-      {:excoveralls, "~> 0.18", only: :test}
+      {:excoveralls, "~> 0.18", only: :test},
+      {:nanoid, "~> 2.1.0"}
     ]
   end
 
