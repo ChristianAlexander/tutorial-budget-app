@@ -22,6 +22,12 @@ defmodule Budgie.Tracking do
     Repo.get(budget_query(criteria), id)
   end
 
+  def get_budget_by_join_code(code, criteria \\ []) do
+    query = budget_query([{:join_link_code, code} | criteria])
+
+    Repo.one(query)
+  end
+
   defp budget_query(criteria) do
     query = from(b in Budget)
 
@@ -31,6 +37,11 @@ defmodule Budgie.Tracking do
 
       {:preload, bindings}, query ->
         preload(query, ^bindings)
+
+      {:join_link_code, code}, query ->
+        from b in query,
+          join: link in assoc(b, :join_link),
+          where: link.code == ^code
 
       _, query ->
         query

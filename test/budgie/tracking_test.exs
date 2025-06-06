@@ -410,5 +410,17 @@ defmodule Budgie.TrackingTest do
       assert join_link.budget_id == budget.id
       assert join_link.code == existing_link.code
     end
+
+    test "gets budget by join code", %{budget: budget} do
+      join_link = insert(:budget_join_link, budget: budget)
+      _other_irrelevant_join_link = insert(:budget_join_link)
+
+      assert %Tracking.Budget{} = result = Tracking.get_budget_by_join_code(join_link.code)
+      assert result.id == budget.id
+    end
+
+    test "returns nil without matching join code" do
+      assert is_nil(Tracking.get_budget_by_join_code("invalid"))
+    end
   end
 end
