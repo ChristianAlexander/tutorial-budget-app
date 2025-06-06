@@ -13,6 +13,7 @@ defmodule Budgie.Tracking.Budget do
     belongs_to :creator, Budgie.Accounts.User
 
     has_many :periods, Budgie.Tracking.BudgetPeriod
+    has_one :join_link, Budgie.Tracking.BudgetJoinLink
 
     timestamps(type: :utc_datetime)
   end

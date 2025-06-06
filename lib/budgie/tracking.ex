@@ -3,6 +3,7 @@ defmodule Budgie.Tracking do
 
   alias Budgie.Repo
   alias Budgie.Tracking.Budget
+  alias Budgie.Tracking.BudgetJoinLink
   alias Budgie.Tracking.BudgetPeriod
 
   def create_budget(attrs \\ %{}) do
@@ -179,5 +180,15 @@ defmodule Budgie.Tracking do
       _, query ->
         query
     end)
+  end
+
+  def ensure_join_link(%Budget{} = budget) do
+    %BudgetJoinLink{}
+    |> BudgetJoinLink.changeset(%{budget_id: budget.id})
+    |> Repo.insert(
+      on_conflict: {:replace, [:updated_at]},
+      conflict_target: :budget_id,
+      returning: true
+    )
   end
 end
