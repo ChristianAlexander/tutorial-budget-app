@@ -64,6 +64,8 @@ defmodule BudgieWeb.Router do
   scope "/", BudgieWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    post "/join/:code", JoinController, :join
+
     live_session :require_authenticated_user,
       on_mount: [{BudgieWeb.UserAuth, :ensure_authenticated}] do
       live "/budgets", BudgetListLive

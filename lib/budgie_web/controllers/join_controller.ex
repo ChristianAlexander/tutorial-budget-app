@@ -27,4 +27,23 @@ defmodule BudgieWeb.JoinController do
         |> render(:show_invitation, budget: budget, code: code)
     end
   end
+
+  def join(conn, %{"code" => code}) do
+    current_user = conn.assigns.current_user
+
+    budget =
+      Tracking.get_budget_by_join_code(code)
+
+    if budget == nil do
+      conn
+      |> put_flash(:error, "Budget not found")
+      |> redirect(to: ~p"/")
+    else
+      if current_user.id != budget.creator_id do
+        Tracking.ensure_budget_collaborator(budget, current_user)
+      end
+
+      redirect(conn, to: ~p"/budgets/#{budget}")
+    end
+  end
 end
