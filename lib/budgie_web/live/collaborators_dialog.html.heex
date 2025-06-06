@@ -77,6 +77,15 @@
         />
         <.icon name="hero-link" class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
       </div>
+      <button
+        phx-click={
+          JS.dispatch("copy-to-clipboard", to: "#join-link-text")
+          |> JS.push("copied", target: @myself)
+        }
+        class="px-3 py-2 text-blue-600 hover:text-blue-700 text-sm font-medium whitespace-nowrap border border-gray-200 rounded-lg hover:bg-gray-50"
+      >
+        {if @link_copied, do: "Copied", else: "Copy Link"}
+      </button>
     </div>
   </div>
 </div>

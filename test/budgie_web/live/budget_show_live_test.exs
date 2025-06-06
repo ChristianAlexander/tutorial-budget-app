@@ -216,6 +216,22 @@ defmodule BudgieWeb.BudgetShowLiveTest do
                budget_id: budget.id
              )
     end
+
+    test "changes text to copied on click of copy link button", %{
+      conn: conn,
+      user: user,
+      budget: budget
+    } do
+      conn = log_in_user(conn, user)
+      {:ok, lv, _html} = live(conn, ~p"/budgets/#{budget}/collaborators")
+
+      copy_button = element(lv, "button", "Copy Link")
+
+      render_click(copy_button)
+
+      refute has_element?(lv, "button", "Copy Link")
+      assert has_element?(lv, "button", "Copied")
+    end
   end
 
   describe "calculate_ending_balances/2" do
