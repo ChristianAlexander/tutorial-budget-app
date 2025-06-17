@@ -7,12 +7,6 @@ defmodule Budgie.Tracking do
   alias Budgie.Tracking.BudgetJoinLink
   alias Budgie.Tracking.BudgetPeriod
 
-  def create_budget(attrs \\ %{}) do
-    %Budget{}
-    |> Budget.changeset(attrs)
-    |> Repo.insert()
-  end
-
   def list_budgets, do: list_budgets([])
 
   def list_budgets(criteria) when is_list(criteria) do
@@ -50,10 +44,6 @@ defmodule Budgie.Tracking do
       _, query ->
         query
     end)
-  end
-
-  def change_budget(budget, attrs \\ %{}) do
-    Budget.changeset(budget, attrs)
   end
 
   alias Budgie.Tracking.BudgetTransaction
