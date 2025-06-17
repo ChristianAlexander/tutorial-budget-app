@@ -26,10 +26,7 @@ defmodule Budgie.Tracking.Budget do
     |> validate_required([:name, :start_date, :end_date, :creator_id])
     |> validate_length(:name, max: 100)
     |> validate_length(:description, max: 500)
-    |> check_constraint(:end_date,
-      name: :budget_end_after_start,
-      message: "must end after start date"
-    )
+    |> validate_end_date_after_start_date()
     |> Budgie.Validations.validate_date_month_boundaries()
     |> add_periods()
   end
@@ -43,6 +40,18 @@ defmodule Budgie.Tracking.Budget do
     changeset
     |> Ecto.Changeset.change(%{periods: months_between(start_date, end_date)})
     |> Ecto.Changeset.cast_assoc(:periods)
+  end
+
+  defp validate_end_date_after_start_date(changeset) do
+    start_date = get_field(changeset, :start_date)
+    end_date = get_field(changeset, :end_date)
+
+    if not is_nil(start_date) and not is_nil(end_date) and
+         Date.compare(start_date, end_date) != :lt do
+      add_error(changeset, :end_date, "must end after start date")
+    else
+      changeset
+    end
   end
 
   def months_between(start_date, end_date, acc \\ []) do
