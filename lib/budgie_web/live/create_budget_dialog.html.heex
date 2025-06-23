@@ -10,29 +10,42 @@
     phx-change="validate"
     phx-submit="save"
   >
-    <div class="space-y-4">
-      <.input
-        field={@form[:name]}
-        label="Budget Name"
-        placeholder="e.g., Groceries, Entertainment"
-        autofocus
-        required
-      />
-      <.input
-        field={@form[:description]}
-        label="Description"
-        type="textarea"
-        placeholder="What is this budget for?"
-      />
-    </div>
-
-    <div class="space-y-4">
-      <h2 class="text-lg font-semibold">Budget Period</h2>
-
-      <div class="grid grid-cols-2 gap-4">
-        <.input field={@form[:start_date]} label="Start Date" type="date" />
-        <.input field={@form[:end_date]} label="End Date" type="date" />
+    <.inputs_for :let={budget} field={@form[:budget]}>
+      <div class="space-y-4">
+        <.input
+          field={budget[:name]}
+          label="Budget Name"
+          placeholder="e.g., Groceries, Entertainment"
+          autofocus
+          required
+        />
+        <.input
+          field={budget[:description]}
+          label="Description"
+          type="textarea"
+          placeholder="What is this budget for?"
+        />
       </div>
+
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold">Budget Period</h2>
+
+        <div class="grid grid-cols-2 gap-4">
+          <.input field={budget[:start_date]} label="Start Date" type="date" />
+          <.input field={budget[:end_date]} label="End Date" type="date" />
+        </div>
+      </div>
+    </.inputs_for>
+
+    <div class="space-y-4">
+      <h2 class="text-lg font-semibold">Funding</h2>
+      <.input
+        field={@form[:period_funding_amount]}
+        label="Monthly Amount (optional)"
+        type="number"
+        step="0.01"
+        placeholder="$0.00"
+      />
     </div>
 
     <div class="pt-4">

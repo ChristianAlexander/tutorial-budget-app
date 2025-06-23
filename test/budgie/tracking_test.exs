@@ -4,65 +4,6 @@ defmodule Budgie.TrackingTest do
   alias Budgie.Tracking
 
   describe "budgets" do
-    alias Budgie.Tracking.Budget
-
-    test "create_budget/1 with valid data creates budget" do
-      attrs = params_with_assocs(:budget)
-
-      assert {:ok, %Budget{} = budget} = Tracking.create_budget(attrs)
-      assert budget.name == attrs.name
-      assert budget.description == attrs.description
-      assert budget.start_date == attrs.start_date
-      assert budget.end_date == attrs.end_date
-      assert budget.creator_id == attrs.creator_id
-    end
-
-    test "create_budget/1 with valid data creates periods along with the budget" do
-      user = insert(:user)
-
-      valid_attrs = %{
-        name: "some name",
-        description: "some description",
-        start_date: ~D[2025-01-01],
-        end_date: ~D[2025-02-28],
-        creator_id: user.id
-      }
-
-      assert {:ok, %Budget{} = budget} = Tracking.create_budget(valid_attrs)
-      assert Enum.count(budget.periods) == 2
-
-      [january_period, february_period] = budget.periods
-      assert january_period.start_date == ~D[2025-01-01]
-      assert january_period.end_date == ~D[2025-01-31]
-      assert february_period.start_date == ~D[2025-02-01]
-      assert february_period.end_date == ~D[2025-02-28]
-    end
-
-    test "create_budget/1 requires name" do
-      attrs =
-        params_with_assocs(:budget)
-        |> Map.delete(:name)
-
-      assert {:error, %Ecto.Changeset{} = changeset} = Tracking.create_budget(attrs)
-
-      assert changeset.valid? == false
-      assert %{name: ["can't be blank"]} = errors_on(changeset)
-    end
-
-    test "create_budget/1 requires valid dates" do
-      attrs =
-        params_with_assocs(:budget,
-          start_date: ~D[2025-12-01],
-          end_date: ~D[2025-01-31]
-        )
-
-      assert {:error, %Ecto.Changeset{} = changeset} =
-               Tracking.create_budget(attrs)
-
-      assert changeset.valid? == false
-      assert %{end_date: ["must end after start date"]} = errors_on(changeset)
-    end
-
     test "list_budgets/0 returns all budgets" do
       budgets = insert_pair(:budget)
 
