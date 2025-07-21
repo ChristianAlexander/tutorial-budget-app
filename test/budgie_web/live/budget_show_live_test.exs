@@ -236,7 +236,7 @@ defmodule BudgieWeb.BudgetShowLiveTest do
 
   describe "calculate_ending_balances/2" do
     test "does not crash with empty period list" do
-      assert %{} = BudgetShowLive.calculate_ending_balances([], %{})
+      assert %{} == BudgetShowLive.calculate_ending_balances([], %{})
     end
 
     test "correctly calculates ending balances across four periods with sparse data" do
